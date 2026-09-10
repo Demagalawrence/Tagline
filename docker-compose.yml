@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: connectqr-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-connectqr-dev-secret-change-in-production}
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=http://localhost:8081
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/package.json:/app/package.json
+    command: npm run start:dev
+    restart: unless-stopped
+    networks:
+      - connectqr-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: connectqr-frontend
+    ports:
+      - "8081:8081"
+    environment:
+      - EXPO_NO_WATCH_CONTENT=true
+      - REACT_NATIVE_MANUAL_DEVSERVER=1
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npx expo start --web --port 8081
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - connectqr-net
+
+networks:
+  connectqr-net:
+    driver: bridge

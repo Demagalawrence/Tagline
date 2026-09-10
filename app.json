@@ -1,25 +1,81 @@
 {
   "expo": {
-    "name": "Tagline",
-    "slug": "Tagline",
+    "name": "ConnectQR",
+    "slug": "connectqr",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/favicon.png",
+    "scheme": "connectqr",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/favicon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0C10"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "ConnectQR uses your camera to scan QR codes so you can instantly share and save contact information.",
+        "NSContactsUsageDescription": "ConnectQR saves scanned contacts to your address book so you can reach them later.",
+        "NSMicrophoneUsageDescription": "ConnectQR does not record audio. This permission is required by the camera module.",
+        "NSLocalNetworkUsageDescription": "ConnectQR looks for nearby devices on your local Wi-Fi so you can share your contact without Internet."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#0B0C10",
+        "foregroundImage": "./assets/favicon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_CONTACTS",
+        "WRITE_CONTACTS",
+        "ACCESS_WIFI_STATE",
+        "CHANGE_WIFI_STATE",
+        "CHANGE_WIFI_MULTICAST_STATE",
+        {
+          "name": "NEARBY_WIFI_DEVICES",
+          "usesPermissionFlags": "neverForLocation"
+        }
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "output": "static",
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ConnectQR uses your camera to scan QR codes so you can instantly share and save contact information.",
+          "microphonePermission": "ConnectQR does not record audio. This permission is required by the camera module.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "ConnectQR saves scanned contacts to your address book so you can reach them later."
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0B0C10",
+          "image": "./assets/favicon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "dark": {
+            "image": "./assets/favicon.png",
+            "backgroundColor": "#0B0C10"
+          }
+        }
+      ]
+    ]
   }
 }

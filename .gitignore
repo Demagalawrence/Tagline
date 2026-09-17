@@ -31,7 +31,13 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
+!**/.env.example
+
+# test / coverage
+coverage/
+junit.xml
 
 # typescript
 *.tsbuildinfo

@@ -1,10 +1,29 @@
-version: "3.9"
-
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: connectqr-db
+    environment:
+      POSTGRES_USER: connectqr
+      POSTGRES_PASSWORD: connectqr
+      POSTGRES_DB: connectqr
+    ports:
+      - "5432:5432"
+    volumes:
+      - connectqr-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U connectqr -d connectqr"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - connectqr-net
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: development
     container_name: connectqr-backend
     ports:
       - "3000:3000"
@@ -13,10 +32,15 @@ services:
       - JWT_SECRET=${JWT_SECRET:-connectqr-dev-secret-change-in-production}
       - JWT_EXPIRES_IN=7d
       - CORS_ORIGIN=http://localhost:8081
+      - DATABASE_URL=postgres://connectqr:connectqr@db:5432/connectqr
+      - DB_SYNCHRONIZE=true
     volumes:
       - ./backend/src:/app/src
       - ./backend/package.json:/app/package.json
     command: npm run start:dev
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - connectqr-net
@@ -44,3 +68,6 @@ services:
 networks:
   connectqr-net:
     driver: bridge
+
+volumes:
+  connectqr-db-data:

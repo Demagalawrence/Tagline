@@ -1,48 +1,47 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
+import { User } from '../entities/user.entity';
 import { UserProfile, PrivacySettings } from '../common/types';
 
 @Injectable()
 export class ProfileService {
-  private profiles = new Map<string, UserProfile>();
-  private privacy = new Map<string, PrivacySettings>();
-
-  private defaultPrivacy: PrivacySettings = {
-    showPhone: true,
-    showWhatsapp: true,
-    showPhoto: true,
-    allowDiscovery: true,
-    allowOfflineSharing: true,
-  };
+  constructor(@InjectRepository(User) private users: Repository<User>) {}
 
   async getProfile(userId: string): Promise<UserProfile> {
-    const profile = this.profiles.get(userId);
-    if (!profile) throw new NotFoundException('Profile not found');
-    return profile;
+    const user = await this.users.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('Profile not found');
+    return user.toProfile();
   }
 
   async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
-    const existing = this.profiles.get(userId);
-    if (!existing) throw new NotFoundException('Profile not found');
+    const user = await this.users.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('Profile not found');
 
-    const next: UserProfile = { ...existing, ...updates, id: userId };
-    this.profiles.set(userId, next);
-    return next;
+    const { id: _id, createdAt: _createdAt, ...rest } = updates;
+    Object.assign(user, rest);
+    const saved = await this.users.save(user);
+    return saved.toProfile();
   }
 
   async getPrivacy(userId: string): Promise<PrivacySettings> {
-    return this.privacy.get(userId) ?? { ...this.defaultPrivacy };
+    const user = await this.users.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('Profile not found');
+    return user.toPrivacy();
   }
 
   async updatePrivacy(userId: string, updates: Partial<PrivacySettings>): Promise<PrivacySettings> {
-    const current = this.privacy.get(userId) ?? { ...this.defaultPrivacy };
-    const next = { ...current, ...updates };
-    this.privacy.set(userId, next);
-    return next;
+    const user = await this.users.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('Profile not found');
+
+    Object.assign(user, updates);
+    const saved = await this.users.save(user);
+    return saved.toPrivacy();
   }
 
   async createDefault(userId: string, data: Partial<UserProfile>): Promise<UserProfile> {
-    const profile: UserProfile = {
+    const user = this.users.create({
       id: userId,
       name: data.name ?? 'New User',
       phone: data.phone ?? '',
@@ -52,9 +51,12 @@ export class ProfileService {
       title: data.title,
       company: data.company,
       avatar: data.avatar,
-      createdAt: new Date().toISOString(),
-    };
-    this.profiles.set(userId, profile);
-    return profile;
+    });
+    const saved = await this.users.save(user);
+    return saved.toProfile();
+  }
+
+  async findCore(userId: string): Promise<User | null> {
+    return this.users.findOneBy({ id: userId });
   }
 }

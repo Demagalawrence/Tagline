@@ -1,5 +1,5 @@
 import { UserProfile, PrivacySettings } from '../types';
-import { MOCK_USER, DEFAULT_PRIVACY_SETTINGS } from '../mock/user';
+import { apiRequest } from './api';
 
 export interface ProfileService {
   getProfile(): Promise<UserProfile>;
@@ -8,37 +8,30 @@ export interface ProfileService {
   updatePrivacySettings(settings: Partial<PrivacySettings>): Promise<PrivacySettings>;
 }
 
-export class MockProfileService implements ProfileService {
-  private currentProfile: UserProfile = { ...MOCK_USER };
-  private privacySettings: PrivacySettings = { ...DEFAULT_PRIVACY_SETTINGS };
-
+export class ApiProfileService implements ProfileService {
   async getProfile(): Promise<UserProfile> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return { ...this.currentProfile };
+    return apiRequest<UserProfile>('/api/profile', { auth: true });
   }
 
   async updateProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    this.currentProfile = {
-      ...this.currentProfile,
-      ...updates,
-    };
-    return { ...this.currentProfile };
+    return apiRequest<UserProfile>('/api/profile', {
+      method: 'PATCH',
+      body: updates,
+      auth: true,
+    });
   }
 
   async getPrivacySettings(): Promise<PrivacySettings> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return { ...this.privacySettings };
+    return apiRequest<PrivacySettings>('/api/profile/privacy', { auth: true });
   }
 
   async updatePrivacySettings(settings: Partial<PrivacySettings>): Promise<PrivacySettings> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    this.privacySettings = {
-      ...this.privacySettings,
-      ...settings,
-    };
-    return { ...this.privacySettings };
+    return apiRequest<PrivacySettings>('/api/profile/privacy', {
+      method: 'PATCH',
+      body: settings,
+      auth: true,
+    });
   }
 }
 
-export const profileService = new MockProfileService();
+export const profileService: ProfileService = new ApiProfileService();

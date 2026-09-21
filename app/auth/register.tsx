@@ -29,7 +29,7 @@ export default function RegisterScreen() {
 
   const onSubmit = useCallback(
     async (values: RegisterFormValues) => {
-      const ok = await register(values.name, values.email, values.phone);
+      const ok = await register(values.name, values.email, values.phone, values.password);
       if (ok) router.replace('/(tabs)');
     },
     [register, router],

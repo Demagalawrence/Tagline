@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useScanner } from '@/features/scanner/useScanner';
 import { ScannerView } from '@/features/scanner/ScannerView';
 import { useScanHistoryStore } from '@/store/useScanHistoryStore';
+import { connectionService } from '@/services/connectionService';
 
 export default function ScanScreen() {
   const router = useRouter();
@@ -27,6 +28,9 @@ export default function ScanScreen() {
     const contact = scanned.contact;
     const payload = encodeURIComponent(contact.rawPayload);
     void useScanHistoryStore.getState().add(contact);
+    if (contact.type !== 'unknown') {
+      void connectionService.saveConnection(contact).catch(() => {});
+    }
 
     const timer = setTimeout(() => {
       if (scanned.type === 'unknown') {

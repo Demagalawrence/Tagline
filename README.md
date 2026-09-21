@@ -96,7 +96,9 @@ Backend env vars live in `backend/.env` (see `backend/.env.example`):
 | `JWT_SECRET`   | dev     | Token signing secret — change it |
 | `JWT_EXPIRES_IN` | `7d`  | Token lifetime                   |
 | `DATABASE_URL` | —       | Postgres connection string       |
-| `DB_SYNCHRONIZE` | `true` | Auto-create tables (dev only) |
+| `DB_SYNCHRONIZE` | `true` | Auto-create tables (dev only)   |
+
+The app reads its API base from `EXPO_PUBLIC_API_URL` (default `http://localhost:3000`). Copy `.env.example` to `.env` to override it. Logins are stored as JWTs in SecureStore, so the app boots straight into authenticated state when a valid token exists.
 
 > **Security:** set `JWT_SECRET` to a strong random value and `DB_SYNCHRONIZE=false` in production. Switch to explicit TypeORM migrations before shipping.
 

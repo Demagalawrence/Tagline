@@ -4,7 +4,11 @@ export async function getItem<T>(key: string): Promise<T | null> {
   try {
     const raw = await SecureStore.getItemAsync(key);
     if (!raw) return null;
-    return JSON.parse(raw) as T;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return raw as unknown as T;
+    }
   } catch {
     return null;
   }

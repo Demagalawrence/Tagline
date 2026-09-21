@@ -4,6 +4,9 @@ export const APP_TAGLINE = 'Connect instantly.';
 export const CONNECTQR_WEB_BASE = 'https://connectqr.app';
 export const OFFLINE_SCHEME = 'connectqr://offline';
 
+export const API_BASE_URL =
+  (process.env.EXPO_PUBLIC_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:3000';
+
 export const STORAGE_KEYS = {
   onboardingComplete: 'connectqr.onboarding.complete',
   profile: 'connectqr.profile',
@@ -11,6 +14,7 @@ export const STORAGE_KEYS = {
   themeMode: 'connectqr.theme.mode',
   qrDesign: 'connectqr.qr.design',
   scanHistory: 'connectqr.scanHistory',
+  token: 'connectqr.auth.token',
 } as const;
 
 export const OFFICE_SESSION_MINUTES = 15;

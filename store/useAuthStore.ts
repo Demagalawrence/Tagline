@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { UserProfile } from '@/types';
 import { authService } from '@/services/authService';
+import { getToken } from '@/services/api';
 import { MOCK_USER } from '@/mock/user';
 import { useProfileStore } from '@/store/useProfileStore';
 
@@ -10,9 +11,9 @@ interface AuthStore {
   isLoading: boolean;
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, phone: string) => Promise<boolean>;
+  register: (name: string, email: string, phone: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  hydrate: () => void;
+  hydrate: () => Promise<void>;
   updateUser: (updates: Partial<UserProfile>) => void;
 }
 
@@ -22,9 +23,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   isLoading: false,
   isHydrated: false,
 
-  hydrate: () => {
-    const profile = useProfileStore.getState().profile;
-    set({ isAuthenticated: true, user: profile, isHydrated: true });
+  hydrate: async () => {
+    const token = await getToken();
+    if (!token) {
+      set({ isAuthenticated: false, user: null, isHydrated: true });
+      return;
+    }
+    set({ isAuthenticated: true, isHydrated: true });
+    void useProfileStore.getState().load().catch(() => {});
   },
 
   login: async (email, password) => {
@@ -32,6 +38,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const res = await authService.login(email, password);
       useProfileStore.setState({ profile: res.user });
+      void useProfileStore.getState().load().catch(() => {});
       set({ isAuthenticated: true, user: res.user, isLoading: false });
       return true;
     } catch {
@@ -40,11 +47,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 
-  register: async (name, email, phone) => {
+  register: async (name, email, phone, password) => {
     set({ isLoading: true });
     try {
-      const res = await authService.register(name, email, phone);
+      const res = await authService.register(name, email, phone, password);
       useProfileStore.setState({ profile: res.user });
+      void useProfileStore.getState().load().catch(() => {});
       set({ isAuthenticated: true, user: res.user, isLoading: false });
       return true;
     } catch {

@@ -1,22 +1,28 @@
-import { ReactNode } from 'react';
-import { Modal as RNModal, StyleSheet, View } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
+import { ReactNode } from 'react'
+import { Modal as RNModal, StyleSheet, View } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
 
 interface ModalProps {
-  visible: boolean;
-  onClose: () => void;
-  children: ReactNode;
+  visible: boolean
+  onClose: () => void
+  children: ReactNode
 }
 
 export function Modal({ visible, onClose, children }: ModalProps) {
-  const { colors } = useAppTheme();
+  const { colors } = useAppTheme()
   return (
-    <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+    <RNModal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
       <View style={styles.overlay}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>{children}</View>
       </View>
     </RNModal>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -32,4 +38,4 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
   },
-});
+})

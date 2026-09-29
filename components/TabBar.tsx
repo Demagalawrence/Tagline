@@ -1,11 +1,11 @@
-import { useRef } from 'react';
-import { Animated, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Text } from '@/components/Text';
-import { Icon, IconName } from '@/components/Icon';
-import { radius, spacing } from '@/theme';
+import { useState } from 'react'
+import { Animated, Platform, Pressable, StyleSheet, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Text } from '@/components/Text'
+import { Icon, IconName } from '@/components/Icon'
+import { radius, spacing } from '@/theme'
 
 const TAB_ICONS: Record<string, { active: IconName; inactive: IconName; label: string }> = {
   index: { active: 'home', inactive: 'home-outline', label: 'Home' },
@@ -13,7 +13,7 @@ const TAB_ICONS: Record<string, { active: IconName; inactive: IconName; label: s
   'my-qr': { active: 'qr-code', inactive: 'qr-code-outline', label: 'My QR' },
   offline: { active: 'wifi', inactive: 'wifi-outline', label: 'Offline' },
   profile: { active: 'person', inactive: 'person-outline', label: 'Profile' },
-};
+}
 
 function TabButton({
   routeName,
@@ -22,22 +22,36 @@ function TabButton({
   onPress,
   onLongPress,
 }: {
-  routeName: string;
-  isFocused: boolean;
-  label: string;
-  onPress: () => void;
-  onLongPress: () => void;
+  routeName: string
+  isFocused: boolean
+  label: string
+  onPress: () => void
+  onLongPress: () => void
 }) {
-  const { colors } = useAppTheme();
-  const scale = useRef(new Animated.Value(1)).current;
-  const icons = TAB_ICONS[routeName] ?? { active: 'ellipse', inactive: 'ellipse-outline', label };
+  const { colors } = useAppTheme()
+  const [scale] = useState(() => new Animated.Value(1))
+  const icons = TAB_ICONS[routeName] ?? { active: 'ellipse', inactive: 'ellipse-outline', label }
 
   return (
     <Pressable
       onPress={onPress}
       onLongPress={onLongPress}
-      onPressIn={() => Animated.spring(scale, { toValue: 0.92, useNativeDriver: true, speed: 60, bounciness: 0 }).start()}
-      onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 60, bounciness: 0 }).start()}
+      onPressIn={() =>
+        Animated.spring(scale, {
+          toValue: 0.92,
+          useNativeDriver: true,
+          speed: 60,
+          bounciness: 0,
+        }).start()
+      }
+      onPressOut={() =>
+        Animated.spring(scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 60,
+          bounciness: 0,
+        }).start()
+      }
       accessibilityRole="tab"
       accessibilityState={{ selected: isFocused }}
       accessibilityLabel={label}
@@ -71,12 +85,12 @@ function TabButton({
         </Text>
       </Animated.View>
     </Pressable>
-  );
+  )
 }
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const { colors, shadows } = useAppTheme();
-  const insets = useSafeAreaInsets();
+  const { colors, shadows } = useAppTheme()
+  const insets = useSafeAreaInsets()
 
   return (
     <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
@@ -91,17 +105,22 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         ]}
       >
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const isFocused = state.index === index;
-          const label = options.tabBarLabel ?? options.title ?? TAB_ICONS[route.name]?.label ?? route.name;
+          const { options } = descriptors[route.key]
+          const isFocused = state.index === index
+          const label =
+            options.tabBarLabel ?? options.title ?? TAB_ICONS[route.name]?.label ?? route.name
 
           const onPress = () => {
-            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            })
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+              navigation.navigate(route.name)
             }
-          };
-          const onLongPress = () => navigation.emit({ type: 'tabLongPress', target: route.key });
+          }
+          const onLongPress = () => navigation.emit({ type: 'tabLongPress', target: route.key })
 
           return (
             <TabButton
@@ -112,11 +131,11 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               onPress={onPress}
               onLongPress={onLongPress}
             />
-          );
+          )
         })}
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -152,4 +171,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+})

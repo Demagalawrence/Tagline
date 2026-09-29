@@ -1,15 +1,15 @@
-import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Screen } from '@/components/Screen';
-import { Text } from '@/components/Text';
-import { Button } from '@/components/Button';
-import { QRCard } from '@/components/QRCard';
-import { useProfileStore } from '@/store/useProfileStore';
-import { useOnboardingStore } from '@/store/useOnboardingStore';
-import { qrService } from '@/services/qrService';
-import { spacing } from '@/theme';
+import { useMemo, useState } from 'react'
+import { StyleSheet, View } from 'react-native'
+import { useRouter } from 'expo-router'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
+import { Button } from '@/components/Button'
+import { QRCard } from '@/components/QRCard'
+import { useProfileStore } from '@/store/useProfileStore'
+import { useOnboardingStore } from '@/store/useOnboardingStore'
+import { qrService } from '@/services/qrService'
+import { spacing } from '@/theme'
 
 const STEPS = [
   {
@@ -24,29 +24,35 @@ const STEPS = [
     title: 'Connect without Internet',
     body: 'No signal? Offline Connect shares your contact over a local Wi-Fi or hotspot instead.',
   },
-] as const;
+] as const
 
 export default function OnboardingScreen() {
-  const { colors } = useAppTheme();
-  const router = useRouter();
-  const profile = useProfileStore((s) => s.profile);
-  const [step, setStep] = useState(0);
+  const { colors } = useAppTheme()
+  const router = useRouter()
+  const profile = useProfileStore((s) => s.profile)
+  const [step, setStep] = useState(0)
 
-  const payload = useMemo(() => qrService.generatePayload(profile, 'profile'), [profile]);
+  const payload = useMemo(() => qrService.generatePayload(profile, 'profile'), [profile])
 
   const next = () => {
     if (step < STEPS.length - 1) {
-      setStep(step + 1);
+      setStep(step + 1)
     } else {
-      void useOnboardingStore.getState().complete().then(() => router.replace('/(tabs)'));
+      void useOnboardingStore
+        .getState()
+        .complete()
+        .then(() => router.replace('/(tabs)'))
     }
-  };
+  }
 
   const skip = () => {
-    void useOnboardingStore.getState().complete().then(() => router.replace('/(tabs)'));
-  };
+    void useOnboardingStore
+      .getState()
+      .complete()
+      .then(() => router.replace('/(tabs)'))
+  }
 
-  const current = STEPS[step];
+  const current = STEPS[step]
 
   return (
     <Screen contentContainerStyle={styles.container}>
@@ -61,7 +67,14 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.stage}>
-        <QRCard payload={payload} type="profile" size={180} showLogo logo={profile.avatar} label={profile.name} />
+        <QRCard
+          payload={payload}
+          type="profile"
+          size={180}
+          showLogo
+          logo={profile.avatar}
+          label={profile.name}
+        />
       </View>
 
       <View style={styles.content}>
@@ -69,10 +82,7 @@ export default function OnboardingScreen() {
           {STEPS.map((_, i) => (
             <View
               key={i}
-              style={[
-                styles.dot,
-                { backgroundColor: i === step ? colors.primary : colors.border },
-              ]}
+              style={[styles.dot, { backgroundColor: i === step ? colors.primary : colors.border }]}
             />
           ))}
         </View>
@@ -85,11 +95,16 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.actions}>
-        <Button label={step === STEPS.length - 1 ? 'Get Started' : 'Next'} onPress={next} fullWidth size="lg" />
+        <Button
+          label={step === STEPS.length - 1 ? 'Get Started' : 'Next'}
+          onPress={next}
+          fullWidth
+          size="lg"
+        />
         <Button label="Skip" onPress={skip} variant="ghost" fullWidth />
       </View>
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -130,4 +145,4 @@ const styles = StyleSheet.create({
   actions: {
     gap: spacing.sm,
   },
-});
+})

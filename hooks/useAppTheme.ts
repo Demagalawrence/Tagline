@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
-import { useThemeStore } from '@/store/useThemeStore';
-import { colors, radius, spacing, shadows, typography } from '@/theme';
-import type { ThemeColors } from '@/theme';
+import { useMemo } from 'react'
+import { useThemeStore } from '@/store/useThemeStore'
+import { colors, radius, spacing, shadows, typography } from '@/theme'
+import type { ThemeColors } from '@/theme'
 
 export function useAppTheme() {
-  const isDark = useThemeStore((state) => state.isDark);
-  const mode = useThemeStore((state) => state.mode);
+  const isDark = useThemeStore((state) => state.isDark)
+  const mode = useThemeStore((state) => state.mode)
 
   return useMemo(
     () => ({
@@ -18,5 +18,5 @@ export function useAppTheme() {
       typography,
     }),
     [isDark, mode],
-  );
+  )
 }

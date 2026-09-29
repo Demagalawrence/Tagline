@@ -1,17 +1,27 @@
-import { Text as RNText, TextProps as RNTextProps, StyleSheet } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { typography } from '@/theme';
+import { Text as RNText, TextProps as RNTextProps, StyleSheet } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { typography } from '@/theme'
 
-type Variant = 'display' | 'title' | 'heading' | 'subheading' | 'body' | 'bodyStrong' | 'caption' | 'label' | 'button';
+type Variant =
+  | 'display'
+  | 'title'
+  | 'heading'
+  | 'subheading'
+  | 'body'
+  | 'bodyStrong'
+  | 'caption'
+  | 'label'
+  | 'button'
 
 interface TextProps extends RNTextProps {
-  variant?: Variant;
-  color?: 'primary' | 'secondary' | 'muted' | 'inverse' | 'accent' | 'success' | 'warning' | 'danger';
-  align?: 'auto' | 'left' | 'right' | 'center' | 'justify';
+  variant?: Variant
+  color?:
+    'primary' | 'secondary' | 'muted' | 'inverse' | 'accent' | 'success' | 'warning' | 'danger'
+  align?: 'auto' | 'left' | 'right' | 'center' | 'justify'
 }
 
 export function Text({ variant = 'body', color = 'primary', align, style, ...rest }: TextProps) {
-  const { colors } = useAppTheme();
+  const { colors } = useAppTheme()
 
   const textColor =
     color === 'primary'
@@ -30,15 +40,21 @@ export function Text({ variant = 'body', color = 'primary', align, style, ...res
                   ? colors.statusWarning
                   : color === 'danger'
                     ? colors.statusWarning
-                    : colors.textPrimary;
+                    : colors.textPrimary
 
   return (
     <RNText
       accessibilityRole={variant === 'button' ? 'text' : undefined}
-      style={[styles.base, styles[variant], { color: textColor }, align ? { textAlign: align } : null, style]}
+      style={[
+        styles.base,
+        styles[variant],
+        { color: textColor },
+        align ? { textAlign: align } : null,
+        style,
+      ]}
       {...rest}
     />
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -96,4 +112,4 @@ const styles = StyleSheet.create({
     lineHeight: typography.lineHeight.tight * typography.fontSize.md,
     fontWeight: typography.fontWeight.semibold,
   },
-});
+})

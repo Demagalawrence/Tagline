@@ -1,33 +1,37 @@
-import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Screen } from '@/components/Screen';
-import { ScreenHeader } from '@/components/ScreenHeader';
-import { Text } from '@/components/Text';
-import { Card } from '@/components/Card';
-import { Avatar } from '@/components/Avatar';
-import { Button } from '@/components/Button';
-import { EmptyState } from '@/components/EmptyState';
-import { StatusBadge } from '@/components/StatusBadge';
-import { useOfflineStore } from '@/store/useOfflineStore';
-import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { spacing } from '@/theme';
+import { useEffect } from 'react'
+import { StyleSheet, View } from 'react-native'
+import { useRouter } from 'expo-router'
+import { Screen } from '@/components/Screen'
+import { ScreenHeader } from '@/components/ScreenHeader'
+import { Text } from '@/components/Text'
+import { Card } from '@/components/Card'
+import { Avatar } from '@/components/Avatar'
+import { Button } from '@/components/Button'
+import { EmptyState } from '@/components/EmptyState'
+import { StatusBadge } from '@/components/StatusBadge'
+import { useOfflineStore } from '@/store/useOfflineStore'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
+import { spacing } from '@/theme'
 
 export default function NearbyDevicesScreen() {
-  const router = useRouter();
-  const network = useNetworkStatus();
-  const devices = useOfflineStore((s) => s.devices);
-  const isDiscovering = useOfflineStore((s) => s.isDiscovering);
-  const localIp = useOfflineStore((s) => s.localIp);
-  const discover = useOfflineStore((s) => s.discover);
+  const router = useRouter()
+  const network = useNetworkStatus()
+  const devices = useOfflineStore((s) => s.devices)
+  const isDiscovering = useOfflineStore((s) => s.isDiscovering)
+  const localIp = useOfflineStore((s) => s.localIp)
+  const discover = useOfflineStore((s) => s.discover)
 
   useEffect(() => {
-    void discover();
-  }, [discover]);
+    void discover()
+  }, [discover])
 
   return (
     <Screen>
-      <ScreenHeader title="Nearby Devices" subtitle="People you shared with" onBack={() => router.back()} />
+      <ScreenHeader
+        title="Nearby Devices"
+        subtitle="People you shared with"
+        onBack={() => router.back()}
+      />
       <View style={styles.content}>
         <Card style={styles.networkCard}>
           <View style={styles.networkRow}>
@@ -80,7 +84,7 @@ export default function NearbyDevicesScreen() {
         )}
       </View>
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -113,4 +117,4 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
-});
+})

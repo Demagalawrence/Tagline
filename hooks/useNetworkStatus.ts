@@ -1,38 +1,38 @@
-import { useEffect, useState } from 'react';
-import { AppState } from 'react-native';
-import { networkService } from '@/services/networkService';
-import type { NetworkStateInfo } from '@/services/networkService';
-import { useIsMounted } from '@/hooks/useIsMounted';
+import { useEffect, useState } from 'react'
+import { AppState } from 'react-native'
+import { networkService } from '@/services/networkService'
+import type { NetworkStateInfo } from '@/services/networkService'
+import { useIsMounted } from '@/hooks/useIsMounted'
 
 const initial: NetworkStateInfo = {
   status: 'unknown',
   isConnected: false,
   isInternetReachable: null,
-};
+}
 
 export function useNetworkStatus(): NetworkStateInfo {
-  const [state, setState] = useState<NetworkStateInfo>(initial);
-  const isMounted = useIsMounted();
+  const [state, setState] = useState<NetworkStateInfo>(initial)
+  const isMounted = useIsMounted()
 
   useEffect(() => {
-    let active = true;
+    let active = true
 
     const refresh = async () => {
-      const next = await networkService.getState();
-      if (active && isMounted()) setState(next);
-    };
+      const next = await networkService.getState()
+      if (active && isMounted()) setState(next)
+    }
 
-    refresh();
+    refresh()
 
     const sub = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') refresh();
-    });
+      if (nextState === 'active') refresh()
+    })
 
     return () => {
-      active = false;
-      sub.remove();
-    };
-  }, [isMounted]);
+      active = false
+      sub.remove()
+    }
+  }, [isMounted])
 
-  return state;
+  return state
 }

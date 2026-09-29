@@ -1,5 +1,5 @@
-import { Tabs } from 'expo-router/js-tabs';
-import { TabBar } from '@/components/TabBar';
+import { Tabs } from 'expo-router/js-tabs'
+import { TabBar } from '@/components/TabBar'
 
 export default function TabsLayout() {
   return (
@@ -10,5 +10,5 @@ export default function TabsLayout() {
       <Tabs.Screen name="offline" />
       <Tabs.Screen name="profile" />
     </Tabs>
-  );
+  )
 }

@@ -1,32 +1,34 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Image, StyleSheet, View } from 'react-native';
-import { Text } from '@/components/Text';
-import { APP_NAME, APP_TAGLINE } from '@/constants';
-import { radius, spacing } from '@/theme';
+import { useEffect, useState } from 'react'
+import { Animated, Image, StyleSheet, View } from 'react-native'
+import { Text } from '@/components/Text'
+import { APP_NAME, APP_TAGLINE } from '@/constants'
+import { radius, spacing } from '@/theme'
 
-const SPLASH_BG = '#0B0C10';
-const SPLASH_TEXT = '#F6F7FA';
-const SPLASH_MUTED = 'rgba(246,247,250,0.6)';
-const SPLASH_BOX = 'rgba(255,255,255,0.08)';
-const SPLASH_BORDER = 'rgba(255,255,255,0.14)';
+const SPLASH_BG = '#0B0C10'
+const SPLASH_TEXT = '#F6F7FA'
+const SPLASH_MUTED = 'rgba(246,247,250,0.6)'
+const SPLASH_BOX = 'rgba(255,255,255,0.08)'
+const SPLASH_BORDER = 'rgba(255,255,255,0.14)'
 
 export function AppSplash({ exiting, onExited }: { exiting?: boolean; onExited?: () => void }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.88)).current;
+  const [opacity] = useState(() => new Animated.Value(0))
+  const [scale] = useState(() => new Animated.Value(0.88))
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, friction: 7, useNativeDriver: true }),
-    ]).start();
-  }, [opacity, scale]);
+    ]).start()
+  }, [opacity, scale])
 
   useEffect(() => {
-    if (!exiting) return;
-    Animated.timing(opacity, { toValue: 0, duration: 280, useNativeDriver: true }).start(({ finished }) => {
-      if (finished) onExited?.();
-    });
-  }, [exiting, opacity, onExited]);
+    if (!exiting) return
+    Animated.timing(opacity, { toValue: 0, duration: 280, useNativeDriver: true }).start(
+      ({ finished }) => {
+        if (finished) onExited?.()
+      },
+    )
+  }, [exiting, opacity, onExited])
 
   return (
     <Animated.View style={[styles.fill, { backgroundColor: SPLASH_BG, opacity }]}>
@@ -45,7 +47,7 @@ export function AppSplash({ exiting, onExited }: { exiting?: boolean; onExited?:
         Connecting...
       </Text>
     </Animated.View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -85,4 +87,4 @@ const styles = StyleSheet.create({
     bottom: spacing['4xl'],
     color: SPLASH_MUTED,
   },
-});
+})

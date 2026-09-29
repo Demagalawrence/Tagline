@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { v4 as uuid } from 'uuid';
-import { Connection } from '../entities/connection.entity';
-import { ScannedContact, NearbyDevice } from '../common/types';
+import { Injectable } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { v4 as uuid } from 'uuid'
+import { Connection } from '../entities/connection.entity'
+import { ScannedContact, NearbyDevice } from '../common/types'
 
 @Injectable()
 export class ConnectionsService {
@@ -13,8 +13,8 @@ export class ConnectionsService {
     const rows = await this.connections.find({
       where: { userId },
       order: { scannedAt: 'DESC' },
-    });
-    return rows.map((row) => row.toContact());
+    })
+    return rows.map((row) => row.toContact())
   }
 
   async save(userId: string, contact: ScannedContact): Promise<ScannedContact> {
@@ -32,18 +32,18 @@ export class ConnectionsService {
       scannedAt: new Date(contact.scannedAt ?? Date.now()),
       type: contact.type,
       rawPayload: contact.rawPayload ?? '',
-    });
-    const saved = await this.connections.save(entity);
-    return saved.toContact();
+    })
+    const saved = await this.connections.save(entity)
+    return saved.toContact()
   }
 
   async delete(userId: string, contactId: string): Promise<boolean> {
-    const result = await this.connections.delete({ userId, id: contactId });
-    return (result.affected ?? 0) > 0;
+    const result = await this.connections.delete({ userId, id: contactId })
+    return (result.affected ?? 0) > 0
   }
 
   async getNearbyDevices(userId: string): Promise<NearbyDevice[]> {
-    const rows = await this.connections.find({ where: { userId, type: 'offline' } });
+    const rows = await this.connections.find({ where: { userId, type: 'offline' } })
     return rows.map((c) => ({
       id: `peer_${c.id}`,
       name: c.name,
@@ -52,6 +52,6 @@ export class ConnectionsService {
       status: 'waiting' as const,
       signalStrength: 100,
       lastSeen: c.scannedAt instanceof Date ? c.scannedAt.toISOString() : String(c.scannedAt),
-    }));
+    }))
   }
 }

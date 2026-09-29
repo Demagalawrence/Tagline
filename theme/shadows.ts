@@ -1,4 +1,4 @@
-import { ViewStyle } from 'react-native';
+import { ViewStyle } from 'react-native'
 
 export const shadows: Record<string, ViewStyle> = {
   sm: {
@@ -29,4 +29,4 @@ export const shadows: Record<string, ViewStyle> = {
     shadowRadius: 12,
     elevation: 6,
   },
-};
+}

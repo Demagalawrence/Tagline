@@ -7,6 +7,6 @@ export const radius = {
   xl: 20,
   '2xl': 24,
   full: 9999,
-};
+}
 
-export type Radius = keyof typeof radius;
+export type Radius = keyof typeof radius

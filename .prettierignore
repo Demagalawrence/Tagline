@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.expo/
+coverage/
+backend/dist/
+package-lock.json
+eas.json
+.expo/
+*.md

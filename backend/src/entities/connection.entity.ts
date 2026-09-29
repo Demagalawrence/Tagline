@@ -1,47 +1,47 @@
-import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
-import { ScannedContact } from '../common/types';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm'
+import { ScannedContact } from '../common/types'
 
 @Entity('connections')
 export class Connection {
   @PrimaryColumn()
-  id: string;
+  id: string
 
   @Index()
   @Column()
-  userId: string;
+  userId: string
 
   @Column()
-  name: string;
+  name: string
 
   @Column({ default: '' })
-  phone: string;
+  phone: string
 
   @Column({ default: '' })
-  whatsapp: string;
+  whatsapp: string
 
   @Column({ nullable: true })
-  bio?: string;
+  bio?: string
 
   @Column({ nullable: true })
-  avatar?: string;
+  avatar?: string
 
   @Column({ nullable: true })
-  title?: string;
+  title?: string
 
   @Column({ nullable: true })
-  company?: string;
+  company?: string
 
   @Column({ nullable: true })
-  email?: string;
+  email?: string
 
   @Column({ type: 'timestamp' })
-  scannedAt: Date;
+  scannedAt: Date
 
   @Column({ default: 'unknown' })
-  type: string;
+  type: string
 
   @Column({ default: '' })
-  rawPayload: string;
+  rawPayload: string
 
   toContact(): ScannedContact {
     return {
@@ -54,9 +54,10 @@ export class Connection {
       title: this.title,
       company: this.company,
       email: this.email,
-      scannedAt: this.scannedAt instanceof Date ? this.scannedAt.toISOString() : String(this.scannedAt),
+      scannedAt:
+        this.scannedAt instanceof Date ? this.scannedAt.toISOString() : String(this.scannedAt),
       type: (this.type as ScannedContact['type']) || 'unknown',
       rawPayload: this.rawPayload,
-    };
+    }
   }
 }

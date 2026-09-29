@@ -1,41 +1,41 @@
-import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsString, MinLength, Matches } from 'class-validator'
+import { ApiProperty } from '@nestjs/swagger'
 
-const PHONE_REGEX = /^\+[1-9]\d{7,14}$/;
+const PHONE_REGEX = /^\+[1-9]\d{7,14}$/
 
 export class RegisterDto {
   @ApiProperty({ example: 'John Doe' })
   @IsString()
   @MinLength(2)
-  name: string;
+  name: string
 
   @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
-  email: string;
+  email: string
 
   @ApiProperty({ example: '+256700123456' })
   @IsString()
   @Matches(PHONE_REGEX, { message: 'Enter a valid international number' })
-  phone: string;
+  phone: string
 
   @ApiProperty({ example: 'password123' })
   @IsString()
   @MinLength(6)
-  password: string;
+  password: string
 }
 
 export class LoginDto {
   @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
-  email: string;
+  email: string
 
   @ApiProperty({ example: 'password123' })
   @IsString()
-  password: string;
+  password: string
 }
 
 export class ForgotPasswordDto {
   @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
-  email: string;
+  email: string
 }

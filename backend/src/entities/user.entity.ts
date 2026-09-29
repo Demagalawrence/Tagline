@@ -1,61 +1,61 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
-import { UserProfile, PrivacySettings } from '../common/types';
+import { Column, Entity, PrimaryColumn } from 'typeorm'
+import { UserProfile, PrivacySettings } from '../common/types'
 
 @Entity('users')
 export class User {
   @PrimaryColumn()
-  id: string;
+  id: string
 
   @Column()
-  name: string;
+  name: string
 
   @Column({ unique: true })
-  email: string;
+  email: string
 
   @Column({ default: '' })
-  phone: string;
+  phone: string
 
   @Column({ default: '' })
-  whatsapp: string;
+  whatsapp: string
 
   @Column({ default: '' })
-  bio: string;
+  bio: string
 
   @Column({ nullable: true })
-  avatar?: string;
+  avatar?: string
 
   @Column({ nullable: true })
-  title?: string;
+  title?: string
 
   @Column({ nullable: true })
-  company?: string;
+  company?: string
 
   @Column({ nullable: true })
-  location?: string;
+  location?: string
 
   @Column({ nullable: true })
-  website?: string;
+  website?: string
 
   @Column()
-  passwordHash: string;
+  passwordHash: string
 
   @Column({ type: 'boolean', default: true })
-  showPhone: boolean;
+  showPhone: boolean
 
   @Column({ type: 'boolean', default: true })
-  showWhatsapp: boolean;
+  showWhatsapp: boolean
 
   @Column({ type: 'boolean', default: true })
-  showPhoto: boolean;
+  showPhoto: boolean
 
   @Column({ type: 'boolean', default: true })
-  allowDiscovery: boolean;
+  allowDiscovery: boolean
 
   @Column({ type: 'boolean', default: true })
-  allowOfflineSharing: boolean;
+  allowOfflineSharing: boolean
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  createdAt: Date
 
   toProfile(): UserProfile {
     return {
@@ -70,8 +70,9 @@ export class User {
       email: this.email,
       location: this.location,
       website: this.website,
-      createdAt: this.createdAt instanceof Date ? this.createdAt.toISOString() : String(this.createdAt),
-    };
+      createdAt:
+        this.createdAt instanceof Date ? this.createdAt.toISOString() : String(this.createdAt),
+    }
   }
 
   toPrivacy(): PrivacySettings {
@@ -81,6 +82,6 @@ export class User {
       showPhoto: this.showPhoto,
       allowDiscovery: this.allowDiscovery,
       allowOfflineSharing: this.allowOfflineSharing,
-    };
+    }
   }
 }

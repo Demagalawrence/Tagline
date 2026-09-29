@@ -1,26 +1,26 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, View } from 'react-native';
-import { CameraView } from 'expo-camera';
-import type { BarcodeScanningResult } from 'expo-camera';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Text } from '@/components/Text';
-import { Button } from '@/components/Button';
-import { IconButton } from '@/components/IconButton';
-import { Icon } from '@/components/Icon';
-import { radius, spacing } from '@/theme';
-import type { ScannerStatus } from '@/features/scanner/useScanner';
+import { useEffect, useState } from 'react'
+import { Animated, Easing, StyleSheet, View } from 'react-native'
+import { CameraView } from 'expo-camera'
+import type { BarcodeScanningResult } from 'expo-camera'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Text } from '@/components/Text'
+import { Button } from '@/components/Button'
+import { IconButton } from '@/components/IconButton'
+import { Icon } from '@/components/Icon'
+import { radius, spacing } from '@/theme'
+import type { ScannerStatus } from '@/features/scanner/useScanner'
 
 interface ScannerViewProps {
-  status: ScannerStatus;
-  torchOn: boolean;
-  onToggleTorch: () => void;
-  onRequestPermission: () => void;
-  onBarcodeScanned: (result: BarcodeScanningResult) => void;
-  onMountError: () => void;
+  status: ScannerStatus
+  torchOn: boolean
+  onToggleTorch: () => void
+  onRequestPermission: () => void
+  onBarcodeScanned: (result: BarcodeScanningResult) => void
+  onMountError: () => void
 }
 
 function ScanLine() {
-  const translateY = useRef(new Animated.Value(0)).current;
+  const [translateY] = useState(() => new Animated.Value(0))
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -38,21 +38,21 @@ function ScanLine() {
           useNativeDriver: true,
         }),
       ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [translateY]);
+    )
+    loop.start()
+    return () => loop.stop()
+  }, [translateY])
 
   return (
     <View style={styles.lineWrap} pointerEvents="none">
       <Animated.View style={[styles.line, { transform: [{ translateY }] }]} />
     </View>
-  );
+  )
 }
 
 function FrameCorners() {
-  const { colors } = useAppTheme();
-  const corner = { borderColor: colors.primary } as const;
+  const { colors } = useAppTheme()
+  const corner = { borderColor: colors.primary } as const
   return (
     <>
       <View style={[styles.corner, styles.cornerTL, corner]} />
@@ -60,11 +60,18 @@ function FrameCorners() {
       <View style={[styles.corner, styles.cornerBL, corner]} />
       <View style={[styles.corner, styles.cornerBR, corner]} />
     </>
-  );
+  )
 }
 
-export function ScannerView({ status, torchOn, onToggleTorch, onRequestPermission, onBarcodeScanned, onMountError }: ScannerViewProps) {
-  const { colors } = useAppTheme();
+export function ScannerView({
+  status,
+  torchOn,
+  onToggleTorch,
+  onRequestPermission,
+  onBarcodeScanned,
+  onMountError,
+}: ScannerViewProps) {
+  const { colors } = useAppTheme()
 
   if (status === 'permission' || status === 'loading') {
     return (
@@ -79,10 +86,15 @@ export function ScannerView({ status, torchOn, onToggleTorch, onRequestPermissio
           <Text variant="body" color="secondary" align="center" style={styles.stateMessage}>
             ConnectQR uses your camera to scan QR codes. Your camera feed is never stored.
           </Text>
-          <Button label="Grant camera access" onPress={() => void onRequestPermission()} fullWidth style={{ marginTop: spacing.lg }} />
+          <Button
+            label="Grant camera access"
+            onPress={() => void onRequestPermission()}
+            fullWidth
+            style={{ marginTop: spacing.lg }}
+          />
         </View>
       </View>
-    );
+    )
   }
 
   if (status === 'error') {
@@ -96,11 +108,11 @@ export function ScannerView({ status, torchOn, onToggleTorch, onRequestPermissio
             Camera unavailable
           </Text>
           <Text variant="body" color="secondary" align="center" style={styles.stateMessage}>
-            We couldn't start your camera. Close the screen and try again.
+            We couldn’t start your camera. Close the screen and try again.
           </Text>
         </View>
       </View>
-    );
+    )
   }
 
   return (
@@ -138,7 +150,7 @@ export function ScannerView({ status, torchOn, onToggleTorch, onRequestPermissio
         </View>
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -192,10 +204,34 @@ const styles = StyleSheet.create({
     height: 34,
     borderWidth: 3,
   },
-  cornerTL: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: radius.lg },
-  cornerTR: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: radius.lg },
-  cornerBL: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: radius.lg },
-  cornerBR: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: radius.lg },
+  cornerTL: {
+    top: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+    borderTopLeftRadius: radius.lg,
+  },
+  cornerTR: {
+    top: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+    borderTopRightRadius: radius.lg,
+  },
+  cornerBL: {
+    bottom: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: radius.lg,
+  },
+  cornerBR: {
+    bottom: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    borderBottomRightRadius: radius.lg,
+  },
   flashWrap: {
     position: 'absolute',
     bottom: 36,
@@ -219,4 +255,4 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     marginTop: spacing.sm,
   },
-});
+})

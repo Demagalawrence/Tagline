@@ -1,12 +1,22 @@
-import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View, ViewStyle } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Card } from '@/components/Card';
-import { radius, spacing } from '@/theme';
+import { useEffect, useState } from 'react'
+import { Animated, StyleSheet, View, ViewStyle } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Card } from '@/components/Card'
+import { radius, spacing } from '@/theme'
 
-export function Skeleton({ width, height, style, circle = false }: { width?: number | `${number}%`; height: number; style?: ViewStyle; circle?: boolean }) {
-  const { colors } = useAppTheme();
-  const pulse = useRef(new Animated.Value(0.4)).current;
+export function Skeleton({
+  width,
+  height,
+  style,
+  circle = false,
+}: {
+  width?: number | `${number}%`
+  height: number
+  style?: ViewStyle
+  circle?: boolean
+}) {
+  const { colors } = useAppTheme()
+  const [pulse] = useState(() => new Animated.Value(0.4))
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -14,10 +24,10 @@ export function Skeleton({ width, height, style, circle = false }: { width?: num
         Animated.timing(pulse, { toValue: 1, duration: 800, useNativeDriver: true }),
         Animated.timing(pulse, { toValue: 0.4, duration: 800, useNativeDriver: true }),
       ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse]);
+    )
+    loop.start()
+    return () => loop.stop()
+  }, [pulse])
 
   return (
     <Animated.View
@@ -27,7 +37,7 @@ export function Skeleton({ width, height, style, circle = false }: { width?: num
         style,
       ]}
     />
-  );
+  )
 }
 
 export function LoadingCard() {
@@ -36,7 +46,7 @@ export function LoadingCard() {
       <Skeleton width="100%" height={16} style={{ marginBottom: spacing.md }} />
       <Skeleton width="70%" height={14} />
     </Card>
-  );
+  )
 }
 
 export function LoadingProfile() {
@@ -49,9 +59,13 @@ export function LoadingProfile() {
           <Skeleton width="45%" height={14} />
         </View>
       </View>
-      <Skeleton width="100%" height={160} style={{ marginTop: spacing.xl, borderRadius: radius.lg }} />
+      <Skeleton
+        width="100%"
+        height={160}
+        style={{ marginTop: spacing.xl, borderRadius: radius.lg }}
+      />
     </Card>
-  );
+  )
 }
 
 export function LoadingQR() {
@@ -60,7 +74,7 @@ export function LoadingQR() {
       <Skeleton width={220} height={220} style={{ borderRadius: radius.lg }} />
       <Skeleton width="50%" height={14} style={{ marginTop: spacing.xl }} />
     </Card>
-  );
+  )
 }
 
 export function LoadingList({ rows = 3 }: { rows?: number }) {
@@ -70,18 +84,18 @@ export function LoadingList({ rows = 3 }: { rows?: number }) {
         <LoadingCard key={i} />
       ))}
     </View>
-  );
+  )
 }
 
 export function LoadingScreen() {
-  const { colors } = useAppTheme();
+  const { colors } = useAppTheme()
   return (
     <View style={[styles.fill, { backgroundColor: colors.background, padding: spacing.xl }]}>
       <Skeleton width="40%" height={28} style={{ marginBottom: spacing['2xl'] }} />
       <LoadingProfile />
       <LoadingList rows={2} />
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -98,4 +112,4 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     marginTop: spacing.xl,
   },
-});
+})

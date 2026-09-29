@@ -1,20 +1,20 @@
-import { StyleSheet, View } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Text } from '@/components/Text';
-import { Icon, IconName } from '@/components/Icon';
-import { Button } from '@/components/Button';
-import { spacing } from '@/theme';
+import { StyleSheet, View } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Text } from '@/components/Text'
+import { Icon, IconName } from '@/components/Icon'
+import { Button } from '@/components/Button'
+import { spacing } from '@/theme'
 
 interface EmptyStateProps {
-  icon: IconName;
-  title: string;
-  message?: string;
-  actionLabel?: string;
-  onAction?: () => void;
+  icon: IconName
+  title: string
+  message?: string
+  actionLabel?: string
+  onAction?: () => void
 }
 
 export function EmptyState({ icon, title, message, actionLabel, onAction }: EmptyStateProps) {
-  const { colors } = useAppTheme();
+  const { colors } = useAppTheme()
 
   return (
     <View style={styles.container}>
@@ -33,7 +33,7 @@ export function EmptyState({ icon, title, message, actionLabel, onAction }: Empt
         <Button label={actionLabel} onPress={onAction} size="sm" style={styles.action} />
       ) : null}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -60,4 +60,4 @@ const styles = StyleSheet.create({
   action: {
     marginTop: spacing.sm,
   },
-});
+})

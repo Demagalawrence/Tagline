@@ -1,28 +1,33 @@
-import { Animated, Pressable, StyleSheet } from 'react-native';
-import { useRef } from 'react';
-import { useAppTheme } from '@/hooks/useAppTheme';
+import { Animated, Pressable, StyleSheet } from 'react-native'
+import { useState } from 'react'
+import { useAppTheme } from '@/hooks/useAppTheme'
 
 interface SwitchProps {
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-  accessibilityLabel: string;
-  disabled?: boolean;
+  value: boolean
+  onValueChange: (value: boolean) => void
+  accessibilityLabel: string
+  disabled?: boolean
 }
 
-export function Switch({ value, onValueChange, accessibilityLabel, disabled = false }: SwitchProps) {
-  const { colors } = useAppTheme();
-  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
+export function Switch({
+  value,
+  onValueChange,
+  accessibilityLabel,
+  disabled = false,
+}: SwitchProps) {
+  const { colors } = useAppTheme()
+  const [anim] = useState(() => new Animated.Value(value ? 1 : 0))
 
   const toggle = () => {
-    const next = !value;
+    const next = !value
     Animated.spring(anim, {
       toValue: next ? 1 : 0,
       useNativeDriver: false,
       speed: 40,
       bounciness: 0,
-    }).start();
-    onValueChange(next);
-  };
+    }).start()
+    onValueChange(next)
+  }
 
   return (
     <Pressable
@@ -37,7 +42,11 @@ export function Switch({ value, onValueChange, accessibilityLabel, disabled = fa
           width: 50,
           height: 30,
           borderRadius: 15,
-          backgroundColor: value ? colors.primary : disabled ? colors.surfaceSecondary : colors.border,
+          backgroundColor: value
+            ? colors.primary
+            : disabled
+              ? colors.surfaceSecondary
+              : colors.border,
         },
       ]}
     >
@@ -66,7 +75,7 @@ export function Switch({ value, onValueChange, accessibilityLabel, disabled = fa
         ]}
       />
     </Pressable>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -75,4 +84,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   thumb: {},
-});
+})

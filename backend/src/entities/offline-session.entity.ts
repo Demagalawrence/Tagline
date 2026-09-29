@@ -1,36 +1,36 @@
-import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
-import { OfflineSession as OfflineSessionDto, NearbyDevice } from '../common/types';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm'
+import { OfflineSession as OfflineSessionDto, NearbyDevice } from '../common/types'
 
 @Entity('offline_sessions')
 export class OfflineSession {
   @PrimaryColumn()
-  id: string;
+  id: string
 
   @Index()
   @Column()
-  userId: string;
+  userId: string
 
   @Column()
-  networkName: string;
+  networkName: string
 
   @Column()
-  sessionToken: string;
+  sessionToken: string
 
   @Column({ type: 'int', default: 900 })
-  expiresInSeconds: number;
+  expiresInSeconds: number
 
   @Column({ type: 'boolean', default: true })
-  isSharing: boolean;
+  isSharing: boolean
 
   @Column({ type: 'text', default: '[]' })
-  connectedDevicesJson: string;
+  connectedDevicesJson: string
 
   toDto(): OfflineSessionDto {
-    let connectedDevices: NearbyDevice[] = [];
+    let connectedDevices: NearbyDevice[] = []
     try {
-      connectedDevices = JSON.parse(this.connectedDevicesJson) as NearbyDevice[];
+      connectedDevices = JSON.parse(this.connectedDevicesJson) as NearbyDevice[]
     } catch {
-      connectedDevices = [];
+      connectedDevices = []
     }
     return {
       id: this.id,
@@ -39,6 +39,6 @@ export class OfflineSession {
       expiresInSeconds: this.expiresInSeconds,
       isSharing: this.isSharing,
       connectedDevices,
-    };
+    }
   }
 }

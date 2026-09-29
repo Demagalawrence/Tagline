@@ -1,35 +1,48 @@
-import { useCallback, useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Screen } from '@/components/Screen';
-import { Text } from '@/components/Text';
-import { Avatar } from '@/components/Avatar';
-import { Card } from '@/components/Card';
-import { FormInput } from '@/components/FormInput';
-import { Button } from '@/components/Button';
-import { ListItem } from '@/components/ListItem';
-import { useProfileStore } from '@/store/useProfileStore';
-import { useAuthStore } from '@/store/useAuthStore';
-import { profileSchema, ProfileFormValues } from '@/utils/validation';
-import { spacing } from '@/theme';
-import { successHaptic } from '@/utils/haptics';
+import { useCallback, useEffect } from 'react'
+import { StyleSheet, View } from 'react-native'
+import { useRouter } from 'expo-router'
+import { useForm, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
+import { Avatar } from '@/components/Avatar'
+import { Card } from '@/components/Card'
+import { FormInput } from '@/components/FormInput'
+import { Button } from '@/components/Button'
+import { ListItem } from '@/components/ListItem'
+import { useProfileStore } from '@/store/useProfileStore'
+import { useAuthStore } from '@/store/useAuthStore'
+import { profileSchema, ProfileFormValues } from '@/utils/validation'
+import { spacing } from '@/theme'
+import { successHaptic } from '@/utils/haptics'
 
 const MENU_ITEMS = [
   { label: 'Settings', subtitle: 'App preferences', href: '/settings', icon: 'settings-outline' },
-  { label: 'Privacy', subtitle: 'Control what others see', href: '/settings/privacy', icon: 'shield-outline' },
-  { label: 'Appearance', subtitle: 'Light, dark, system', href: '/settings/appearance', icon: 'color-palette-outline' },
-  { label: 'Security', subtitle: 'Sessions & sign-out', href: '/settings/security', icon: 'shield-checkmark-outline' },
-] as const;
+  {
+    label: 'Privacy',
+    subtitle: 'Control what others see',
+    href: '/settings/privacy',
+    icon: 'shield-outline',
+  },
+  {
+    label: 'Appearance',
+    subtitle: 'Light, dark, system',
+    href: '/settings/appearance',
+    icon: 'color-palette-outline',
+  },
+  {
+    label: 'Security',
+    subtitle: 'Sessions & sign-out',
+    href: '/settings/security',
+    icon: 'shield-checkmark-outline',
+  },
+] as const
 
 export default function ProfileScreen() {
-  const { colors } = useAppTheme();
-  const router = useRouter();
-  const profile = useProfileStore((s) => s.profile);
-  const updateProfile = useProfileStore((s) => s.updateProfile);
-  const updateUser = useAuthStore((s) => s.updateUser);
+  const router = useRouter()
+  const profile = useProfileStore((s) => s.profile)
+  const updateProfile = useProfileStore((s) => s.updateProfile)
+  const updateUser = useAuthStore((s) => s.updateUser)
 
   const {
     control,
@@ -46,9 +59,9 @@ export default function ProfileScreen() {
       email: profile.email ?? '',
       title: profile.title ?? '',
     },
-  });
+  })
 
-  const bioValue = useWatch({ control, name: 'bio' });
+  const bioValue = useWatch({ control, name: 'bio' })
 
   useEffect(() => {
     reset({
@@ -58,8 +71,8 @@ export default function ProfileScreen() {
       bio: profile.bio,
       email: profile.email ?? '',
       title: profile.title ?? '',
-    });
-  }, [profile, reset]);
+    })
+  }, [profile, reset])
 
   const onSubmit = useCallback(
     async (values: ProfileFormValues) => {
@@ -70,15 +83,20 @@ export default function ProfileScreen() {
         bio: values.bio,
         email: values.email || undefined,
         title: values.title || undefined,
-      });
+      })
       if (ok) {
-        updateUser({ name: values.name, phone: values.phone, whatsapp: values.whatsapp, bio: values.bio });
-        void successHaptic();
-        reset(values);
+        updateUser({
+          name: values.name,
+          phone: values.phone,
+          whatsapp: values.whatsapp,
+          bio: values.bio,
+        })
+        void successHaptic()
+        reset(values)
       }
     },
     [updateProfile, updateUser, reset],
-  );
+  )
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
@@ -100,14 +118,45 @@ export default function ProfileScreen() {
           Profile details
         </Text>
         <FormInput label="Name" name="name" control={control} placeholder="Your name" />
-        <FormInput label="Phone" name="phone" control={control} placeholder="+256 700 123 456" keyboardType="phone-pad" />
-        <FormInput label="WhatsApp number" name="whatsapp" control={control} placeholder="+256 700 123 456" keyboardType="phone-pad" />
-        <FormInput label="Title" name="title" control={control} placeholder="e.g. Software Engineer" />
-        <FormInput label="Bio" name="bio" control={control} placeholder="A short bio…" multiline numberOfLines={3} maxLength={120} />
+        <FormInput
+          label="Phone"
+          name="phone"
+          control={control}
+          placeholder="+256 700 123 456"
+          keyboardType="phone-pad"
+        />
+        <FormInput
+          label="WhatsApp number"
+          name="whatsapp"
+          control={control}
+          placeholder="+256 700 123 456"
+          keyboardType="phone-pad"
+        />
+        <FormInput
+          label="Title"
+          name="title"
+          control={control}
+          placeholder="e.g. Software Engineer"
+        />
+        <FormInput
+          label="Bio"
+          name="bio"
+          control={control}
+          placeholder="A short bio…"
+          multiline
+          numberOfLines={3}
+          maxLength={120}
+        />
         <Text variant="caption" color="muted" style={styles.counter}>
           {(bioValue ?? '').length}/120
         </Text>
-        <Button label="Save Changes" onPress={handleSubmit(onSubmit)} loading={isSubmitting} disabled={!isDirty} fullWidth />
+        <Button
+          label="Save Changes"
+          onPress={handleSubmit(onSubmit)}
+          loading={isSubmitting}
+          disabled={!isDirty}
+          fullWidth
+        />
       </Card>
 
       <View style={styles.menuCard}>
@@ -128,7 +177,7 @@ export default function ProfileScreen() {
         </Card>
       </View>
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -157,4 +206,4 @@ const styles = StyleSheet.create({
   menuCard: {
     marginBottom: spacing['2xl'],
   },
-});
+})

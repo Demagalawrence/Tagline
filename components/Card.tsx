@@ -1,17 +1,17 @@
-import { ReactNode } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { radius, spacing } from '@/theme';
+import { ReactNode } from 'react'
+import { StyleSheet, View, ViewStyle } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { radius, spacing } from '@/theme'
 
 interface CardProps {
-  children: ReactNode;
-  style?: ViewStyle;
-  padded?: boolean;
-  elevated?: boolean;
+  children: ReactNode
+  style?: ViewStyle
+  padded?: boolean
+  elevated?: boolean
 }
 
 export function Card({ children, style, padded = true, elevated = false }: CardProps) {
-  const { colors, shadows } = useAppTheme();
+  const { colors, shadows } = useAppTheme()
   return (
     <View
       style={[
@@ -27,7 +27,7 @@ export function Card({ children, style, padded = true, elevated = false }: CardP
     >
       {children}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -35,4 +35,4 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
   },
-});
+})

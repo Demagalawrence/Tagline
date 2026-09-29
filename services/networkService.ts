@@ -1,20 +1,20 @@
-import { getNetworkStateAsync, NetworkStateType } from 'expo-network';
-import type { NetworkStatus } from '@/types';
+import { getNetworkStateAsync, NetworkStateType } from 'expo-network'
+import type { NetworkStatus } from '@/types'
 
 export interface NetworkStateInfo {
-  status: NetworkStatus;
-  isConnected: boolean;
-  isInternetReachable: boolean | null;
+  status: NetworkStatus
+  isConnected: boolean
+  isInternetReachable: boolean | null
 }
 
 export interface NetworkService {
-  getState(): Promise<NetworkStateInfo>;
+  getState(): Promise<NetworkStateInfo>
 }
 
 export class ExpoNetworkService implements NetworkService {
   async getState(): Promise<NetworkStateInfo> {
     try {
-      const state = await getNetworkStateAsync();
+      const state = await getNetworkStateAsync()
       const status: NetworkStatus =
         state.type === NetworkStateType.WIFI
           ? 'wifi'
@@ -22,17 +22,17 @@ export class ExpoNetworkService implements NetworkService {
             ? 'cellular'
             : state.type === NetworkStateType.NONE
               ? 'none'
-              : 'unknown';
+              : 'unknown'
 
       return {
         status,
         isConnected: state.isConnected ?? false,
         isInternetReachable: state.isInternetReachable ?? null,
-      };
+      }
     } catch {
-      return { status: 'unknown', isConnected: false, isInternetReachable: null };
+      return { status: 'unknown', isConnected: false, isInternetReachable: null }
     }
   }
 }
 
-export const networkService: NetworkService = new ExpoNetworkService();
+export const networkService: NetworkService = new ExpoNetworkService()

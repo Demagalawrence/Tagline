@@ -7,11 +7,11 @@ services:
       POSTGRES_PASSWORD: connectqr
       POSTGRES_DB: connectqr
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - connectqr-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U connectqr -d connectqr"]
+      test: ['CMD-SHELL', 'pg_isready -U connectqr -d connectqr']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -26,7 +26,7 @@ services:
       target: development
     container_name: connectqr-backend
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - PORT=3000
       - JWT_SECRET=${JWT_SECRET:-connectqr-dev-secret-change-in-production}
@@ -51,7 +51,7 @@ services:
       dockerfile: Dockerfile
     container_name: connectqr-frontend
     ports:
-      - "8081:8081"
+      - '8081:8081'
     environment:
       - EXPO_NO_WATCH_CONTENT=true
       - REACT_NATIVE_MANUAL_DEVSERVER=1

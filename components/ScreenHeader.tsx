@@ -1,26 +1,43 @@
-import { StyleSheet, View } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Text } from '@/components/Text';
-import { IconButton } from '@/components/IconButton';
-import { IconName } from '@/components/Icon';
-import { spacing } from '@/theme';
+import { StyleSheet, View } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Text } from '@/components/Text'
+import { IconButton } from '@/components/IconButton'
+import { IconName } from '@/components/Icon'
+import { spacing } from '@/theme'
 
 interface ScreenHeaderProps {
-  title: string;
-  subtitle?: string;
-  onBack?: () => void;
-  rightIcon?: IconName;
-  onRightPress?: () => void;
-  rightLabel?: string;
+  title: string
+  subtitle?: string
+  onBack?: () => void
+  rightIcon?: IconName
+  onRightPress?: () => void
+  rightLabel?: string
 }
 
-export function ScreenHeader({ title, subtitle, onBack, rightIcon, onRightPress, rightLabel }: ScreenHeaderProps) {
-  const { colors } = useAppTheme();
+export function ScreenHeader({
+  title,
+  subtitle,
+  onBack,
+  rightIcon,
+  onRightPress,
+  rightLabel,
+}: ScreenHeaderProps) {
+  const { colors } = useAppTheme()
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.row}>
-        {onBack ? <IconButton name="arrow-back" onPress={onBack} accessibilityLabel="Go back" size={44} variant="ghost" /> : <View style={styles.placeholder} />}
+        {onBack ? (
+          <IconButton
+            name="arrow-back"
+            onPress={onBack}
+            accessibilityLabel="Go back"
+            size={44}
+            variant="ghost"
+          />
+        ) : (
+          <View style={styles.placeholder} />
+        )}
         <View style={styles.center}>
           <Text variant="subheading" align="center" numberOfLines={1}>
             {title}
@@ -32,13 +49,19 @@ export function ScreenHeader({ title, subtitle, onBack, rightIcon, onRightPress,
           ) : null}
         </View>
         {rightIcon || rightLabel ? (
-          <IconButton name={rightIcon ?? 'ellipsis-horizontal'} onPress={onRightPress ?? (() => {})} accessibilityLabel={rightLabel ?? 'More actions'} size={44} variant="ghost" />
+          <IconButton
+            name={rightIcon ?? 'ellipsis-horizontal'}
+            onPress={onRightPress ?? (() => {})}
+            accessibilityLabel={rightLabel ?? 'More actions'}
+            size={44}
+            variant="ghost"
+          />
         ) : (
           <View style={styles.placeholder} />
         )}
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -58,4 +81,4 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 44,
   },
-});
+})

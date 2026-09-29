@@ -1,33 +1,41 @@
-import { StyleSheet, View } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Text } from '@/components/Text';
-import { radius, spacing } from '@/theme';
+import { StyleSheet, View } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Text } from '@/components/Text'
+import { radius, spacing } from '@/theme'
 
-type Tone = 'neutral' | 'success' | 'warning' | 'info' | 'accent';
+type Tone = 'neutral' | 'success' | 'warning' | 'info' | 'accent'
 
 interface StatusBadgeProps {
-  label: string;
-  tone?: Tone;
-  dot?: boolean;
+  label: string
+  tone?: Tone
+  dot?: boolean
 }
 
 export function StatusBadge({ label, tone = 'neutral', dot = false }: StatusBadgeProps) {
-  const { colors } = useAppTheme();
+  const { colors } = useAppTheme()
 
   const { bg, fg, dotColor } = (() => {
     switch (tone) {
       case 'success':
-        return { bg: colors.statusSuccessBg, fg: colors.statusSuccess, dotColor: colors.statusSuccess };
+        return {
+          bg: colors.statusSuccessBg,
+          fg: colors.statusSuccess,
+          dotColor: colors.statusSuccess,
+        }
       case 'warning':
-        return { bg: colors.statusWarningBg, fg: colors.statusWarning, dotColor: colors.statusWarning };
+        return {
+          bg: colors.statusWarningBg,
+          fg: colors.statusWarning,
+          dotColor: colors.statusWarning,
+        }
       case 'info':
-        return { bg: colors.statusInfoBg, fg: colors.statusInfo, dotColor: colors.statusInfo };
+        return { bg: colors.statusInfoBg, fg: colors.statusInfo, dotColor: colors.statusInfo }
       case 'accent':
-        return { bg: colors.primaryLight, fg: colors.primary, dotColor: colors.primary };
+        return { bg: colors.primaryLight, fg: colors.primary, dotColor: colors.primary }
       default:
-        return { bg: colors.surfaceSecondary, fg: colors.textSecondary, dotColor: colors.textMuted };
+        return { bg: colors.surfaceSecondary, fg: colors.textSecondary, dotColor: colors.textMuted }
     }
-  })();
+  })()
 
   return (
     <View style={[styles.base, { backgroundColor: bg }]}>
@@ -36,7 +44,7 @@ export function StatusBadge({ label, tone = 'neutral', dot = false }: StatusBadg
         {label}
       </Text>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -54,4 +62,4 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: radius.full,
   },
-});
+})

@@ -1,4 +1,4 @@
-import { ScannedContact } from '../types';
+import { ScannedContact } from '../types'
 
 export const MOCK_CONNECTIONS: ScannedContact[] = [
   {
@@ -7,7 +7,8 @@ export const MOCK_CONNECTIONS: ScannedContact[] = [
     phone: '+1 415 555 0192',
     whatsapp: '+1 415 555 0192',
     bio: 'Product Designer @ DesignStudio. Passionate about sleek mobile interfaces.',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
     title: 'Lead UX Designer',
     company: 'DesignStudio',
     email: 'sarah.chen@example.com',
@@ -21,7 +22,8 @@ export const MOCK_CONNECTIONS: ScannedContact[] = [
     phone: '+256 772 987 654',
     whatsapp: '+256 772 987 654',
     bio: 'Founder at TechPulse Africa. Building local developer communities.',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
     title: 'Founder & Tech Lead',
     company: 'TechPulse Africa',
     email: 'alex@techpulse.io',
@@ -35,7 +37,8 @@ export const MOCK_CONNECTIONS: ScannedContact[] = [
     phone: '+44 7700 900077',
     whatsapp: '+44 7700 900077',
     bio: 'Mobile Systems Architect & Open Source Contributor.',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
     title: 'Systems Architect',
     company: 'Apex Systems',
     email: 'jessica.t@apex.dev',
@@ -43,4 +46,4 @@ export const MOCK_CONNECTIONS: ScannedContact[] = [
     type: 'offline',
     rawPayload: 'connectqr://offline/session-jessica-992',
   },
-];
+]

@@ -1,22 +1,27 @@
-import { memo } from 'react';
-import QRCode from 'react-native-qrcode-svg';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { radius } from '@/theme';
+import { memo } from 'react'
+import QRCode from 'react-native-qrcode-svg'
+import { radius } from '@/theme'
 
 interface QrCodeProps {
-  value: string;
-  size?: number;
-  color?: string;
-  logo?: string; // image uri or asset
-  showLogo?: boolean;
-  testID?: string;
+  value: string
+  size?: number
+  color?: string
+  logo?: string // image uri or asset
+  showLogo?: boolean
+  testID?: string
 }
 
-export const QrCode = memo(function QrCode({ value, size = 220, color = '#0F172A', logo, showLogo = false, testID }: QrCodeProps) {
-  const { colors } = useAppTheme();
-  const bg = '#FFFFFF';
+export const QrCode = memo(function QrCode({
+  value,
+  size = 220,
+  color = '#0F172A',
+  logo,
+  showLogo = false,
+  testID,
+}: QrCodeProps) {
+  const bg = '#FFFFFF'
 
-  if (!value) return null;
+  if (!value) return null
 
   return (
     <QRCode
@@ -33,5 +38,5 @@ export const QrCode = memo(function QrCode({ value, size = 220, color = '#0F172A
       logoBorderRadius={radius.sm}
       testID={testID}
     />
-  );
-});
+  )
+})

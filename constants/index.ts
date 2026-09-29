@@ -1,11 +1,12 @@
-export const APP_NAME = 'ConnectQR';
-export const APP_TAGLINE = 'Connect instantly.';
+export const APP_NAME = 'ConnectQR'
+export const APP_TAGLINE = 'Connect instantly.'
 
-export const CONNECTQR_WEB_BASE = 'https://connectqr.app';
-export const OFFLINE_SCHEME = 'connectqr://offline';
+export const CONNECTQR_WEB_BASE = 'https://connectqr.app'
+export const OFFLINE_SCHEME = 'connectqr://offline'
 
 export const API_BASE_URL =
-  (process.env.EXPO_PUBLIC_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:3000';
+  (process.env.EXPO_PUBLIC_API_URL as string | undefined)?.replace(/\/+$/, '') ??
+  'http://localhost:3000'
 
 export const STORAGE_KEYS = {
   onboardingComplete: 'connectqr.onboarding.complete',
@@ -15,9 +16,9 @@ export const STORAGE_KEYS = {
   qrDesign: 'connectqr.qr.design',
   scanHistory: 'connectqr.scanHistory',
   token: 'connectqr.auth.token',
-} as const;
+} as const
 
-export const OFFICE_SESSION_MINUTES = 15;
+export const OFFICE_SESSION_MINUTES = 15
 
 export const QR_DESIGN_OPTIONS = {
   colors: [
@@ -26,6 +27,6 @@ export const QR_DESIGN_OPTIONS = {
     { label: 'Forest', value: '#14532D' },
     { label: 'Navy', value: '#1E3A8A' },
   ] as const,
-};
+}
 
-export const USER_HANDLE = 'medi';
+export const USER_HANDLE = 'medi'

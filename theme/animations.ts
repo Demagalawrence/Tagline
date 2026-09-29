@@ -1,4 +1,4 @@
-import { Easing } from 'react-native';
+import { Easing } from 'react-native'
 
 export const animations = {
   duration: {
@@ -24,6 +24,6 @@ export const animations = {
       mass: 1,
     } as const,
   },
-};
+}
 
-export type Animations = typeof animations;
+export type Animations = typeof animations

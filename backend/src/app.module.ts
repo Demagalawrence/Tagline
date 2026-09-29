@@ -1,11 +1,12 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
-import { ProfileModule } from './profile/profile.module';
-import { QrModule } from './qr/qr.module';
-import { ConnectionsModule } from './connections/connections.module';
-import { OfflineModule } from './offline/offline.module';
+import { Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { join } from 'path'
+import { AuthModule } from './auth/auth.module'
+import { ProfileModule } from './profile/profile.module'
+import { QrModule } from './qr/qr.module'
+import { ConnectionsModule } from './connections/connections.module'
+import { OfflineModule } from './offline/offline.module'
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { OfflineModule } from './offline/offline.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => {
-        const databaseUrl = cfg.get<string>('DATABASE_URL');
+        const databaseUrl = cfg.get<string>('DATABASE_URL')
+        const runMigrations = cfg.get<string>('DB_RUN_MIGRATIONS', 'false') === 'true'
         return {
           type: 'postgres' as const,
           url: databaseUrl,
@@ -24,8 +26,12 @@ import { OfflineModule } from './offline/offline.module';
           password: cfg.get<string>('DB_PASSWORD', 'connectqr'),
           database: cfg.get<string>('DB_NAME', 'connectqr'),
           autoLoadEntities: true,
-          synchronize: cfg.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
-        };
+          // Dev default keeps DB_SYNCHRONIZE for quick iteration; enable
+          // DB_RUN_MIGRATIONS (and turn synchronize off) before shipping.
+          synchronize: !runMigrations && cfg.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
+          migrationsRun: runMigrations,
+          migrations: [join(__dirname, 'migrations/*{.ts,.js}')],
+        }
       },
     }),
     AuthModule,

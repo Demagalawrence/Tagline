@@ -1,18 +1,18 @@
-import { Animated, Pressable, StyleSheet } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Icon, IconName } from '@/components/Icon';
-import { radius, spacing } from '@/theme';
+import { Animated, Pressable, StyleSheet } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Icon, IconName } from '@/components/Icon'
+import { radius, spacing } from '@/theme'
 
 interface IconButtonProps {
-  name: IconName;
-  onPress: () => void;
-  accessibilityLabel: string;
-  size?: number;
-  variant?: 'solid' | 'soft' | 'ghost';
-  disabled?: boolean;
+  name: IconName
+  onPress: () => void
+  accessibilityLabel: string
+  size?: number
+  variant?: 'solid' | 'soft' | 'ghost'
+  disabled?: boolean
 }
 
-const PRESS_SCALE = 0.9;
+const PRESS_SCALE = 0.9
 
 export function IconButton({
   name,
@@ -22,25 +22,39 @@ export function IconButton({
   variant = 'soft',
   disabled = false,
 }: IconButtonProps) {
-  const { colors } = useAppTheme();
-  const scale = new Animated.Value(1);
+  const { colors } = useAppTheme()
+  const scale = new Animated.Value(1)
 
   const bg =
     variant === 'solid'
       ? colors.primary
       : variant === 'soft'
         ? colors.surfaceSecondary
-        : 'transparent';
+        : 'transparent'
 
-  const fg = variant === 'solid' ? colors.textInverse : colors.textPrimary;
-  const iconSize = size * 0.46;
+  const fg = variant === 'solid' ? colors.textInverse : colors.textPrimary
+  const iconSize = size * 0.46
 
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
         onPress={onPress}
-        onPressIn={() => Animated.spring(scale, { toValue: PRESS_SCALE, useNativeDriver: true, speed: 50, bounciness: 0 }).start()}
-        onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 0 }).start()}
+        onPressIn={() =>
+          Animated.spring(scale, {
+            toValue: PRESS_SCALE,
+            useNativeDriver: true,
+            speed: 50,
+            bounciness: 0,
+          }).start()
+        }
+        onPressOut={() =>
+          Animated.spring(scale, {
+            toValue: 1,
+            useNativeDriver: true,
+            speed: 50,
+            bounciness: 0,
+          }).start()
+        }
         disabled={disabled}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
@@ -57,7 +71,7 @@ export function IconButton({
         <Icon name={name} size={iconSize} color={disabled ? colors.textMuted : fg} />
       </Pressable>
     </Animated.View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -66,4 +80,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     margin: spacing.xs,
   },
-});
+})

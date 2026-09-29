@@ -1,9 +1,9 @@
-import { Controller, FieldValues, Control, Path } from 'react-hook-form';
-import { Input, InputProps } from '@/components/Input';
+import { Controller, FieldValues, Control, Path } from 'react-hook-form'
+import { Input, InputProps } from '@/components/Input'
 
 interface FormInputProps<T extends FieldValues> extends Omit<InputProps, 'value' | 'onChangeText'> {
-  control: Control<T>;
-  name: Path<T>;
+  control: Control<T>
+  name: Path<T>
 }
 
 export function FormInput<T extends FieldValues>({ control, name, ...rest }: FormInputProps<T>) {
@@ -21,5 +21,5 @@ export function FormInput<T extends FieldValues>({ control, name, ...rest }: For
         />
       )}
     />
-  );
+  )
 }

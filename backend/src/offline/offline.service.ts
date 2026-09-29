@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { v4 as uuid } from 'uuid';
-import { OfflineSession as OfflineSessionEntity } from '../entities/offline-session.entity';
-import { OfflineSession } from '../common/types';
-import { ConnectionsService } from '../connections/connections.service';
+import { Injectable } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { v4 as uuid } from 'uuid'
+import { OfflineSession as OfflineSessionEntity } from '../entities/offline-session.entity'
+import { OfflineSession } from '../common/types'
+import { ConnectionsService } from '../connections/connections.service'
 
 @Injectable()
 export class OfflineService {
@@ -14,9 +14,9 @@ export class OfflineService {
   ) {}
 
   async startSession(userId: string): Promise<OfflineSession> {
-    await this.sessions.delete({ userId });
+    await this.sessions.delete({ userId })
 
-    const peers = await this.connections.getNearbyDevices(userId);
+    const peers = await this.connections.getNearbyDevices(userId)
     const entity = this.sessions.create({
       id: `sess_${uuid()}`,
       userId,
@@ -25,18 +25,18 @@ export class OfflineService {
       expiresInSeconds: 900,
       isSharing: true,
       connectedDevicesJson: JSON.stringify(peers),
-    });
-    const saved = await this.sessions.save(entity);
-    return saved.toDto();
+    })
+    const saved = await this.sessions.save(entity)
+    return saved.toDto()
   }
 
   async stopSession(userId: string): Promise<boolean> {
-    const result = await this.sessions.delete({ userId });
-    return (result.affected ?? 0) > 0;
+    const result = await this.sessions.delete({ userId })
+    return (result.affected ?? 0) > 0
   }
 
   async getSession(userId: string): Promise<OfflineSession | null> {
-    const session = await this.sessions.findOneBy({ userId });
-    return session ? session.toDto() : null;
+    const session = await this.sessions.findOneBy({ userId })
+    return session ? session.toDto() : null
   }
 }

@@ -1,39 +1,35 @@
-import { useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Screen } from '@/components/Screen';
-import { Text } from '@/components/Text';
-import { FormInput } from '@/components/FormInput';
-import { Button } from '@/components/Button';
-import { useAuthStore } from '@/store/useAuthStore';
-import { loginSchema, LoginFormValues } from '@/utils/validation';
-import { spacing } from '@/theme';
+import { useCallback } from 'react'
+import { StyleSheet, View } from 'react-native'
+import { Link, useRouter } from 'expo-router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
+import { FormInput } from '@/components/FormInput'
+import { Button } from '@/components/Button'
+import { useAuthStore } from '@/store/useAuthStore'
+import { loginSchema, LoginFormValues } from '@/utils/validation'
+import { spacing } from '@/theme'
 
 export default function LoginScreen() {
-  const { colors } = useAppTheme();
-  const router = useRouter();
-  const login = useAuthStore((s) => s.login);
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const { colors } = useAppTheme()
+  const router = useRouter()
+  const login = useAuthStore((s) => s.login)
+  const isLoading = useAuthStore((s) => s.isLoading)
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormValues>({
+  const { control, handleSubmit } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
-  });
+  })
 
   const onSubmit = useCallback(
     async (values: LoginFormValues) => {
-      const ok = await login(values.email, values.password);
-      if (ok) router.replace('/(tabs)');
+      const ok = await login(values.email, values.password)
+      if (ok) router.replace('/(tabs)')
     },
     [login, router],
-  );
+  )
 
   return (
     <Screen scroll keyboardAvoid contentContainerStyle={styles.content}>
@@ -48,9 +44,29 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.form}>
-        <FormInput label="Email" name="email" control={control} placeholder="you@example.com" leftIcon="mail-outline" keyboardType="email-address" />
-        <FormInput label="Password" name="password" control={control} placeholder="••••••••" leftIcon="lock-closed-outline" secure />
-        <Button label={isLoading ? 'Signing in…' : 'Sign In'} onPress={handleSubmit(onSubmit)} loading={isLoading} fullWidth size="lg" />
+        <FormInput
+          label="Email"
+          name="email"
+          control={control}
+          placeholder="you@example.com"
+          leftIcon="mail-outline"
+          keyboardType="email-address"
+        />
+        <FormInput
+          label="Password"
+          name="password"
+          control={control}
+          placeholder="••••••••"
+          leftIcon="lock-closed-outline"
+          secure
+        />
+        <Button
+          label={isLoading ? 'Signing in…' : 'Sign In'}
+          onPress={handleSubmit(onSubmit)}
+          loading={isLoading}
+          fullWidth
+          size="lg"
+        />
       </View>
 
       <View style={styles.links}>
@@ -67,7 +83,7 @@ export default function LoginScreen() {
         </View>
       </View>
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -95,4 +111,4 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
-});
+})

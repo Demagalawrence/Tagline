@@ -15,6 +15,7 @@ components/     Reusable UI components
 features/       Camera, QR, contacts, WhatsApp, calls
 services/       API client layer
 store/          Zustand stores (auth, profile, theme, scan history…)
+utils/          Pure helpers (format, validation, phone, offline payload codec)
 backend/        NestJS API (auth, profile, QR, connections, offline)
 ```
 
@@ -97,27 +98,54 @@ Backend env vars live in `backend/.env` (see `backend/.env.example`):
 | `JWT_EXPIRES_IN` | `7d`  | Token lifetime                   |
 | `DATABASE_URL` | —       | Postgres connection string       |
 | `DB_SYNCHRONIZE` | `true` | Auto-create tables (dev only)   |
+| `DB_RUN_MIGRATIONS` | `false` | Apply `backend/src/migrations` at boot |
 
 The app reads its API base from `EXPO_PUBLIC_API_URL` (default `http://localhost:3000`). Copy `.env.example` to `.env` to override it. Logins are stored as JWTs in SecureStore, so the app boots straight into authenticated state when a valid token exists.
 
-> **Security:** set `JWT_SECRET` to a strong random value and `DB_SYNCHRONIZE=false` in production. Switch to explicit TypeORM migrations before shipping.
+> **Security:** set `JWT_SECRET` to a strong random value. In production set `DB_SYNCHRONIZE=false` and `DB_RUN_MIGRATIONS=true` so schema changes are applied through reviewed migrations.
 
-## Tests
+## Database migrations
+
+Schema changes go through TypeORM migrations (see `backend/src/migrations`):
 
 ```bash
 cd backend
-npm test            # unit tests
+npm run migration:generate -- src/migrations/InitialSchema   # create a migration from entity diff
+npm run migration:run                                        # apply pending migrations
+npm run migration:show                                       # list applied/pending
+npm run migration:revert                                     # undo the last migration
+```
+
+Alternatively set `DB_RUN_MIGRATIONS=true` (with `DB_SYNCHRONIZE=false`) to apply migrations automatically when the API boots.
+
+## Tests, lint, and formatting
+
+```bash
+# App (root)
+npm test            # Jest (jest-expo) unit tests
+npm run lint        # ESLint (eslint-config-expo + Prettier)
+npm run format      # Prettier write (format:check to verify)
+npm run typecheck
+
+# Backend
+cd backend
+npm test            # Jest unit tests
 npm run test:cov    # coverage
+npm run lint
 npm run typecheck
 ```
 
+> Installs use `legacy-peer-deps` (see `.npmrc`) because Expo/RN peer ranges conflict under strict resolution.
+
 ## CI
 
-`.github/workflows/ci.yml` runs on push/PR to `main`: backend typecheck, build, and unit tests, plus an Expo typecheck.
+`.github/workflows/ci.yml` runs on push/PR to `main`: for both the backend and the app it runs typecheck, lint, and unit tests, and additionally builds the backend.
 
 ## Building for stores
 
 ```bash
+npm run lint
+npm test
 npm run typecheck
 npx eas build --profile production --platform android   # or ios
 ```

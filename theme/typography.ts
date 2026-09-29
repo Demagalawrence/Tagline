@@ -27,4 +27,4 @@ export const typography = {
     wide: 0.5,
     wider: 1.0,
   },
-};
+}

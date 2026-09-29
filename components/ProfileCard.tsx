@@ -1,23 +1,23 @@
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Text } from '@/components/Text';
-import { Avatar } from '@/components/Avatar';
-import { StatusBadge } from '@/components/StatusBadge';
-import { Icon } from '@/components/Icon';
-import { QrCode } from '@/features/qr/QrCode';
-import { radius, spacing } from '@/theme';
-import { UserProfile } from '@/types';
-import { qrService } from '@/services/qrService';
+import { Pressable, StyleSheet, View } from 'react-native'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Text } from '@/components/Text'
+import { Avatar } from '@/components/Avatar'
+import { StatusBadge } from '@/components/StatusBadge'
+import { Icon } from '@/components/Icon'
+import { QrCode } from '@/features/qr/QrCode'
+import { radius, spacing } from '@/theme'
+import { UserProfile } from '@/types'
+import { qrService } from '@/services/qrService'
 
 interface ProfileCardProps {
-  user: UserProfile;
-  showQr?: boolean;
-  onPress?: () => void;
+  user: UserProfile
+  showQr?: boolean
+  onPress?: () => void
 }
 
 export function ProfileCard({ user, showQr = true, onPress }: ProfileCardProps) {
-  const { colors } = useAppTheme();
-  const payload = qrService.generatePayload(user, 'profile');
+  const { colors } = useAppTheme()
+  const payload = qrService.generatePayload(user, 'profile')
 
   const body = (
     <>
@@ -54,19 +54,29 @@ export function ProfileCard({ user, showQr = true, onPress }: ProfileCardProps) 
         </>
       ) : null}
     </>
-  );
+  )
 
   if (onPress) {
     return (
-      <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${user.name} profile card`}>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>{body}</View>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${user.name} profile card`}
+      >
+        <View
+          style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        >
+          {body}
+        </View>
       </Pressable>
-    );
+    )
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>{body}</View>
-  );
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      {body}
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
@@ -102,4 +112,4 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.lg,
   },
-});
+})

@@ -9,6 +9,6 @@ export const spacing = {
   '4xl': 40,
   '5xl': 48,
   '6xl': 64,
-};
+}
 
-export type Spacing = keyof typeof spacing;
+export type Spacing = keyof typeof spacing

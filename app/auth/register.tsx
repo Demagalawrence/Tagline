@@ -1,39 +1,35 @@
-import { useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Screen } from '@/components/Screen';
-import { Text } from '@/components/Text';
-import { FormInput } from '@/components/FormInput';
-import { Button } from '@/components/Button';
-import { useAuthStore } from '@/store/useAuthStore';
-import { registerSchema, RegisterFormValues } from '@/utils/validation';
-import { spacing } from '@/theme';
+import { useCallback } from 'react'
+import { StyleSheet, View } from 'react-native'
+import { Link, useRouter } from 'expo-router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useAppTheme } from '@/hooks/useAppTheme'
+import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
+import { FormInput } from '@/components/FormInput'
+import { Button } from '@/components/Button'
+import { useAuthStore } from '@/store/useAuthStore'
+import { registerSchema, RegisterFormValues } from '@/utils/validation'
+import { spacing } from '@/theme'
 
 export default function RegisterScreen() {
-  const { colors } = useAppTheme();
-  const router = useRouter();
-  const register = useAuthStore((s) => s.register);
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const { colors } = useAppTheme()
+  const router = useRouter()
+  const register = useAuthStore((s) => s.register)
+  const isLoading = useAuthStore((s) => s.isLoading)
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormValues>({
+  const { control, handleSubmit } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: '', email: '', phone: '', password: '' },
-  });
+  })
 
   const onSubmit = useCallback(
     async (values: RegisterFormValues) => {
-      const ok = await register(values.name, values.email, values.phone, values.password);
-      if (ok) router.replace('/(tabs)');
+      const ok = await register(values.name, values.email, values.phone, values.password)
+      if (ok) router.replace('/(tabs)')
     },
     [register, router],
-  );
+  )
 
   return (
     <Screen scroll keyboardAvoid contentContainerStyle={styles.content}>
@@ -45,11 +41,45 @@ export default function RegisterScreen() {
       </View>
 
       <View style={styles.form}>
-        <FormInput label="Full name" name="name" control={control} placeholder="Medi" leftIcon="person-outline" autoCapitalize="words" />
-        <FormInput label="Email" name="email" control={control} placeholder="you@example.com" leftIcon="mail-outline" keyboardType="email-address" />
-        <FormInput label="Phone" name="phone" control={control} placeholder="+256 700 123 456" leftIcon="call-outline" keyboardType="phone-pad" />
-        <FormInput label="Password" name="password" control={control} placeholder="At least 6 characters" leftIcon="lock-closed-outline" secure />
-        <Button label={isLoading ? 'Creating account…' : 'Create Account'} onPress={handleSubmit(onSubmit)} loading={isLoading} fullWidth size="lg" />
+        <FormInput
+          label="Full name"
+          name="name"
+          control={control}
+          placeholder="Medi"
+          leftIcon="person-outline"
+          autoCapitalize="words"
+        />
+        <FormInput
+          label="Email"
+          name="email"
+          control={control}
+          placeholder="you@example.com"
+          leftIcon="mail-outline"
+          keyboardType="email-address"
+        />
+        <FormInput
+          label="Phone"
+          name="phone"
+          control={control}
+          placeholder="+256 700 123 456"
+          leftIcon="call-outline"
+          keyboardType="phone-pad"
+        />
+        <FormInput
+          label="Password"
+          name="password"
+          control={control}
+          placeholder="At least 6 characters"
+          leftIcon="lock-closed-outline"
+          secure
+        />
+        <Button
+          label={isLoading ? 'Creating account…' : 'Create Account'}
+          onPress={handleSubmit(onSubmit)}
+          loading={isLoading}
+          fullWidth
+          size="lg"
+        />
       </View>
 
       <View style={styles.footer}>
@@ -61,7 +91,7 @@ export default function RegisterScreen() {
         </Link>
       </View>
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -82,4 +112,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacing['3xl'],
   },
-});
+})

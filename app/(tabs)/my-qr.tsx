@@ -1,61 +1,58 @@
-import { useEffect, useState } from 'react';
-import { Share, StyleSheet, View } from 'react-native';
-import { useAppTheme } from '@/hooks/useAppTheme';
-import { Screen } from '@/components/Screen';
-import { Text } from '@/components/Text';
-import { Card } from '@/components/Card';
-import { QRCard } from '@/components/QRCard';
-import { Button } from '@/components/Button';
-import { BottomSheet } from '@/components/BottomSheet';
-import { ListItem } from '@/components/ListItem';
-import { StatusBadge } from '@/components/StatusBadge';
-import { useProfileStore } from '@/store/useProfileStore';
-import { useQrDesignStore } from '@/store/useQrDesignStore';
-import { qrService } from '@/services/qrService';
-import { QRType } from '@/types';
-import { spacing } from '@/theme';
-import { selectionHaptic, successHaptic } from '@/utils/haptics';
+import { useState } from 'react'
+import { Share, StyleSheet, View } from 'react-native'
+import { Screen } from '@/components/Screen'
+import { Text } from '@/components/Text'
+import { Card } from '@/components/Card'
+import { QRCard } from '@/components/QRCard'
+import { Button } from '@/components/Button'
+import { BottomSheet } from '@/components/BottomSheet'
+import { ListItem } from '@/components/ListItem'
+import { StatusBadge } from '@/components/StatusBadge'
+import { useProfileStore } from '@/store/useProfileStore'
+import { useQrDesignStore } from '@/store/useQrDesignStore'
+import { qrService } from '@/services/qrService'
+import { QRType } from '@/types'
+import { spacing } from '@/theme'
+import { selectionHaptic, successHaptic } from '@/utils/haptics'
 
 const TYPE_OPTIONS: { value: QRType; label: string; subtitle: string }[] = [
   { value: 'profile', label: 'Profile', subtitle: 'Opens your full profile' },
   { value: 'whatsapp', label: 'WhatsApp', subtitle: 'Starts a WhatsApp chat' },
   { value: 'offline', label: 'Offline', subtitle: 'Share over local Wi-Fi' },
-];
+]
 
 export default function MyQrScreen() {
-  const { colors } = useAppTheme();
-  const profile = useProfileStore((s) => s.profile);
-  const design = useQrDesignStore((s) => s.design);
-  const setDesign = useQrDesignStore((s) => s.setDesign);
-  const [type, setType] = useState<QRType>('profile');
-  const [customizing, setCustomizing] = useState(false);
-  const [payload, setPayload] = useState<string>(() => qrService.generatePayload(profile, type) as string);
+  const profile = useProfileStore((s) => s.profile)
+  const design = useQrDesignStore((s) => s.design)
+  const setDesign = useQrDesignStore((s) => s.setDesign)
+  const [type, setType] = useState<QRType>('profile')
+  const [customizing, setCustomizing] = useState(false)
+  const [payload, setPayload] = useState(() => {
+    const generated = qrService.generatePayload(profile, type)
+    return typeof generated === 'string' ? generated : ''
+  })
+  const [prevDeps, setPrevDeps] = useState({ profile, type })
 
-  useEffect(() => {
-    let active = true;
-    const generated = qrService.generatePayload(profile, type);
+  if (prevDeps.profile !== profile || prevDeps.type !== type) {
+    setPrevDeps({ profile, type })
+    const generated = qrService.generatePayload(profile, type)
     if (typeof generated === 'string') {
-      setPayload(generated);
+      setPayload(generated)
     } else {
-      void generated.then((value) => {
-        if (active) setPayload(value);
-      });
+      void generated.then((value) => setPayload(value))
     }
-    return () => {
-      active = false;
-    };
-  }, [profile, type]);
+  }
 
   const share = async () => {
-    void successHaptic();
+    void successHaptic()
     try {
       await Share.share({
         message: `${profile.name} — scan this ConnectQR code to connect: ${payload}`,
-      });
+      })
     } catch {
       // user dismissed the share sheet
     }
-  };
+  }
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
@@ -85,7 +82,7 @@ export default function MyQrScreen() {
         </Text>
         <Card padded={false}>
           {TYPE_OPTIONS.map((opt, i) => {
-            const active = type === opt.value;
+            const active = type === opt.value
             return (
               <ListItem
                 key={opt.value}
@@ -94,21 +91,31 @@ export default function MyQrScreen() {
                 valueLabel={active ? 'Selected' : undefined}
                 last={i === TYPE_OPTIONS.length - 1}
                 onPress={() => {
-                  void selectionHaptic();
-                  setType(opt.value);
+                  void selectionHaptic()
+                  setType(opt.value)
                 }}
               />
-            );
+            )
           })}
         </Card>
       </View>
 
       <View style={styles.actions}>
         <Button label="Share QR" onPress={share} icon="share-outline" fullWidth />
-        <Button label="Customize" onPress={() => setCustomizing(true)} variant="secondary" icon="color-palette-outline" fullWidth />
+        <Button
+          label="Customize"
+          onPress={() => setCustomizing(true)}
+          variant="secondary"
+          icon="color-palette-outline"
+          fullWidth
+        />
       </View>
 
-      <BottomSheet visible={customizing} onClose={() => setCustomizing(false)} title="Customize your QR">
+      <BottomSheet
+        visible={customizing}
+        onClose={() => setCustomizing(false)}
+        title="Customize your QR"
+      >
         <View style={styles.sheetContent}>
           <Text variant="label" color="secondary" style={styles.sectionTitle}>
             Color
@@ -120,7 +127,7 @@ export default function MyQrScreen() {
               { label: 'Forest', value: '#14532D' },
               { label: 'Navy', value: '#1E3A8A' },
             ].map((opt) => {
-              const active = design.fg === opt.value;
+              const active = design.fg === opt.value
               return (
                 <Button
                   key={opt.value}
@@ -128,11 +135,11 @@ export default function MyQrScreen() {
                   variant={active ? 'primary' : 'secondary'}
                   size="sm"
                   onPress={() => {
-                    void selectionHaptic();
-                    void setDesign({ fg: opt.value });
+                    void selectionHaptic()
+                    void setDesign({ fg: opt.value })
                   }}
                 />
-              );
+              )
             })}
           </View>
 
@@ -145,7 +152,7 @@ export default function MyQrScreen() {
         </View>
       </BottomSheet>
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -180,4 +187,4 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
-});
+})

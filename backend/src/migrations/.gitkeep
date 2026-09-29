@@ -1,0 +1,2 @@
+# Migrations live here (TypeORM). Generated with `npm run migration:generate`.
+# Keep the directory in git even while empty.

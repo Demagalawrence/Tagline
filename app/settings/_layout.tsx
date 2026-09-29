@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack } from 'expo-router'
 
 export default function SettingsLayout() {
   return (
@@ -8,5 +8,5 @@ export default function SettingsLayout() {
       <Stack.Screen name="appearance" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="security" options={{ animation: 'slide_from_right' }} />
     </Stack>
-  );
+  )
 }

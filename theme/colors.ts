@@ -61,6 +61,6 @@ export const colors = {
     qrFg: '#0F172A',
     cardShadow: 'rgba(0, 0, 0, 0.35)',
   },
-};
+}
 
-export type ThemeColors = typeof colors.light;
+export type ThemeColors = typeof colors.light

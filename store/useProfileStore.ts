@@ -1,12 +1,13 @@
 import { create } from 'zustand'
 import { UserProfile, PrivacySettings } from '@/types'
 import { profileService } from '@/services/profileService'
-import { MOCK_USER, DEFAULT_PRIVACY_SETTINGS } from '@/mock/user'
+import { DEFAULT_PRIVACY_SETTINGS } from '@/mock/user'
 import { STORAGE_KEYS } from '@/constants'
 import * as storage from '@/utils/storage'
 
 interface ProfileState {
-  profile: UserProfile
+  /** Null until the user signs in and the profile is fetched. */
+  profile: UserProfile | null
   privacy: PrivacySettings
   isLoading: boolean
   isHydrated: boolean
@@ -16,8 +17,10 @@ interface ProfileState {
   updatePrivacy: (updates: Partial<PrivacySettings>) => Promise<boolean>
 }
 
-export const useProfileStore = create<ProfileState>((set, get) => ({
-  profile: { ...MOCK_USER },
+export const useProfileStore = create<ProfileState>((set) => ({
+  // No mock profile: a signed-out user genuinely has no profile, and seeding one
+  // meant the UI rendered a fictional contact during onboarding.
+  profile: null,
   privacy: { ...DEFAULT_PRIVACY_SETTINGS },
   isLoading: false,
   isHydrated: false,
@@ -28,7 +31,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       storage.getItem<PrivacySettings>(STORAGE_KEYS.privacy),
     ])
     set({
-      profile: profile ?? { ...MOCK_USER },
+      profile: profile ?? null,
       privacy: privacy ?? { ...DEFAULT_PRIVACY_SETTINGS },
       isHydrated: true,
     })
@@ -61,9 +64,13 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   updatePrivacy: async (updates) => {
-    const next = await profileService.updatePrivacySettings(updates)
-    set({ privacy: next })
-    await storage.setItem(STORAGE_KEYS.privacy, next)
-    return true
+    try {
+      const next = await profileService.updatePrivacySettings(updates)
+      set({ privacy: next })
+      await storage.setItem(STORAGE_KEYS.privacy, next)
+      return true
+    } catch {
+      return false
+    }
   },
 }))

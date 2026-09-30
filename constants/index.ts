@@ -1,7 +1,9 @@
 export const APP_NAME = 'ConnectQR'
 export const APP_TAGLINE = 'Connect instantly.'
 
-export const CONNECTQR_WEB_BASE = 'https://connectqr.app'
+export const CONNECTQR_WEB_BASE =
+  (process.env.EXPO_PUBLIC_WEB_BASE as string | undefined)?.replace(/\/+$/, '') ??
+  'https://connectqr.app'
 export const OFFLINE_SCHEME = 'connectqr://offline'
 
 export const API_BASE_URL =
@@ -16,6 +18,7 @@ export const STORAGE_KEYS = {
   qrDesign: 'connectqr.qr.design',
   scanHistory: 'connectqr.scanHistory',
   token: 'connectqr.auth.token',
+  deviceKeyId: 'connectqr.device.keyId',
 } as const
 
 export const OFFICE_SESSION_MINUTES = 15

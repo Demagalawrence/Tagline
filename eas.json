@@ -1,18 +1,36 @@
 {
   "cli": {
-    "version": ">= 13.0.0",
-    "appVersionSource": "remote"
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote",
+    "autoSubmit": false
   },
   "build": {
+    "base": {
+      "node": "22.20.0"
+    },
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://10.0.2.2:3000",
+        "EXPO_PUBLIC_WEB_BASE": "http://localhost:8081"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://10.0.2.2:3000"
+      },
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.connectqr.app",
+        "EXPO_PUBLIC_WEB_BASE": "https://connectqr.app"
+      }
     }
   },
   "submit": {

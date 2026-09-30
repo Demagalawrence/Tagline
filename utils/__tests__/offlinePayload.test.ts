@@ -1,13 +1,12 @@
-import { createOfflinePayload, isOfflinePayload, parseOfflinePayload } from '@/utils/offlinePayload'
+import {
+  base64UrlEncode,
+  createOfflinePayload,
+  decodeOfflinePayload,
+  isLegacyOfflinePayload,
+  isOfflinePayload,
+  parseOfflinePayload,
+} from '@/utils/offlinePayload'
 import { PrivacySettings, UserProfile } from '@/types'
-
-jest.mock('expo-crypto', () => ({
-  CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
-  CryptoEncoding: { BASE64: 'base64' },
-  digestStringAsync: jest.fn(async (_algo: string, data: string) =>
-    btoa(data).replace(/\+/g, '-').replace(/\//g, '_'),
-  ),
-}))
 
 const profile: UserProfile = {
   id: 'usr_1',
@@ -29,11 +28,15 @@ const privacy: PrivacySettings = {
 }
 
 describe('offlinePayload', () => {
-  it('round-trips a payload', async () => {
-    const raw = await createOfflinePayload(profile, privacy)
+  it('emits the v2 format the server expects', () => {
+    const raw = createOfflinePayload(profile, privacy)
+    expect(raw.startsWith('connectqr://offline/v2/')).toBe(true)
     expect(isOfflinePayload(raw)).toBe(true)
+  })
 
-    const result = await parseOfflinePayload(raw)
+  it('round-trips a payload', () => {
+    const raw = createOfflinePayload(profile, privacy)
+    const result = parseOfflinePayload(raw)
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.contact.id).toBe('offline_usr_1')
@@ -44,22 +47,63 @@ describe('offlinePayload', () => {
     }
   })
 
-  it('respects privacy settings', async () => {
-    const raw = await createOfflinePayload(profile, { ...privacy, showPhone: false })
-    const result = await parseOfflinePayload(raw)
+  it('respects privacy settings', () => {
+    const raw = createOfflinePayload(profile, { ...privacy, showPhone: false })
+    const result = parseOfflinePayload(raw)
     expect(result.ok && result.contact.phone).toBe('')
+    expect(result.ok && result.contact.whatsapp).toBe('+256700111111')
   })
 
-  it('flags tampered payloads', async () => {
-    const raw = await createOfflinePayload(profile, privacy)
-    const result = await parseOfflinePayload(raw.slice(0, -4) + 'AAAA')
-    expect(result).toEqual({ ok: false, reason: 'tampered' })
+  it('omits the avatar when photo sharing is off', () => {
+    const raw = createOfflinePayload(profile, { ...privacy, showPhoto: false })
+    const decoded = decodeOfflinePayload(raw)
+    expect(decoded?.data.a).toBeUndefined()
   })
 
-  it('rejects malformed input', async () => {
-    expect(await parseOfflinePayload('https://example.com')).toEqual({
+  it('never reports a locally-decoded payload as verified', () => {
+    // Verification needs the sender's registered public key, which lives on the
+    // server. Claiming "verified" here would be a security lie.
+    const raw = createOfflinePayload(profile, privacy)
+    const result = parseOfflinePayload(raw)
+    expect(result.ok && result.trust).toBe('unverified')
+  })
+
+  it('reports a forged body as unverified rather than silently trusting it', () => {
+    // An attacker can rewrite the body, but cannot forge a valid signature.
+    // The local parser cannot detect that, so it must not claim trust; the
+    // server is what rejects it.
+    const raw = createOfflinePayload(profile, privacy)
+    const forged = base64UrlEncode(
+      JSON.stringify({ v: 2, uid: 'usr_1', n: 'Someone Else', ph: '+256700000000', ts: 1 }),
+    )
+    const tampered = `connectqr://offline/v2/${forged}.AAAA`
+
+    const result = parseOfflinePayload(tampered)
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.trust).toBe('unverified')
+  })
+
+  it('flags a structurally malformed payload as tampered', () => {
+    expect(parseOfflinePayload('connectqr://offline/v2/nodot')).toEqual({
       ok: false,
       reason: 'malformed',
+      trust: 'tampered',
     })
+  })
+
+  it('rejects non-offline input', () => {
+    expect(parseOfflinePayload('https://example.com')).toEqual({
+      ok: false,
+      reason: 'malformed',
+      trust: 'none',
+    })
+  })
+
+  it('refuses a legacy v1 code because its shared key was forgeable', () => {
+    const legacy = 'connectqr://offline/v1/abc.def'
+    expect(isLegacyOfflinePayload(legacy)).toBe(true)
+    const result = parseOfflinePayload(legacy)
+    expect(result.ok).toBe(false)
+    expect(!result.ok && result.reason).toBe('unsupported')
   })
 })

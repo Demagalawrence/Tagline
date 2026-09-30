@@ -39,7 +39,7 @@ export function Text({ variant = 'body', color = 'primary', align, style, ...res
                 : color === 'warning'
                   ? colors.statusWarning
                   : color === 'danger'
-                    ? colors.statusWarning
+                    ? colors.statusDanger
                     : colors.textPrimary
 
   return (

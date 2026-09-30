@@ -10,6 +10,7 @@ import { Card } from '@/components/Card'
 import { FormInput } from '@/components/FormInput'
 import { Button } from '@/components/Button'
 import { ListItem } from '@/components/ListItem'
+import { LoadingScreen } from '@/components/Skeleton'
 import { useProfileStore } from '@/store/useProfileStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { profileSchema, ProfileFormValues } from '@/utils/validation'
@@ -52,18 +53,19 @@ export default function ProfileScreen() {
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: profile.name,
-      phone: profile.phone,
-      whatsapp: profile.whatsapp,
-      bio: profile.bio,
-      email: profile.email ?? '',
-      title: profile.title ?? '',
+      name: profile?.name ?? '',
+      phone: profile?.phone ?? '',
+      whatsapp: profile?.whatsapp ?? '',
+      bio: profile?.bio ?? '',
+      email: profile?.email ?? '',
+      title: profile?.title ?? '',
     },
   })
 
   const bioValue = useWatch({ control, name: 'bio' })
 
   useEffect(() => {
+    if (!profile) return
     reset({
       name: profile.name,
       phone: profile.phone,
@@ -97,6 +99,10 @@ export default function ProfileScreen() {
     },
     [updateProfile, updateUser, reset],
   )
+
+  if (!profile) {
+    return <LoadingScreen />
+  }
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>

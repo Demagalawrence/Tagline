@@ -27,10 +27,16 @@ export default function OfflineSessionScreen() {
   const [payload, setPayload] = useState('')
 
   useEffect(() => {
+    if (!profile) return
     let active = true
-    void qrService.generatePayload(profile, 'offline', { privacy }).then((value) => {
-      if (active) setPayload(value)
-    })
+    void qrService
+      .generatePayload(profile, 'offline', { privacy })
+      .then((value) => {
+        if (active) setPayload(value)
+      })
+      .catch(() => {
+        if (active) setPayload('')
+      })
     return () => {
       active = false
     }

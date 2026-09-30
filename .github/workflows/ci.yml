@@ -5,13 +5,41 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend:
     name: Backend (NestJS)
     runs-on: ubuntu-latest
+
+    # A real database so the migration is actually executed, not just compiled.
+    # A broken migration should fail here rather than on first deploy.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: connectqr
+          POSTGRES_PASSWORD: connectqr
+          POSTGRES_DB: connectqr_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U connectqr"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     defaults:
       run:
         working-directory: backend
+
+    env:
+      DATABASE_URL: postgres://connectqr:connectqr@localhost:5432/connectqr_test
+      JWT_SECRET: ci-test-secret-not-used-in-production
+      NODE_ENV: test
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,6 +52,21 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm test
+      - name: Verify migrations apply cleanly
+        run: npm run migration:run
+      - name: Verify migrations are idempotent
+        run: npm run migration:run
+      - name: Production config guard rejects a dev JWT secret
+        run: |
+          # The app must refuse to boot in production with a weak secret, so
+          # assert that guard actually fires rather than trusting it exists.
+          if NODE_ENV=production JWT_SECRET=connectqr-dev-secret-change-in-production \
+             DB_SYNCHRONIZE=true node dist/main.js > /tmp/boot.log 2>&1; then
+            echo "ERROR: production boot unexpectedly succeeded with a dev secret"
+            cat /tmp/boot.log
+            exit 1
+          fi
+          echo "Production guard correctly rejected the weak secret."
 
   app:
     name: App (Expo)

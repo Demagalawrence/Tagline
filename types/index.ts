@@ -1,6 +1,15 @@
-export type QRType = 'whatsapp' | 'profile' | 'offline'
+export type QRType = 'whatsapp' | 'profile' | 'offline' | 'vcard' | 'mecard'
 
 export type ScannedQRType = QRType | 'unknown'
+
+/**
+ * How much the app trusts the details decoded from a scanned code.
+ * - verified:   signature checked against a registered device key
+ * - unverified: no signature, or a key the server has not seen
+ * - tampered:   signature present but invalid, or malformed
+ * - none:       not an integrity-protected format
+ */
+export type TrustLevel = 'verified' | 'unverified' | 'tampered' | 'none'
 
 export interface UserProfile {
   id: string
@@ -86,4 +95,12 @@ export interface ConnectionGroup {
 export interface ScanSummary {
   type: ScannedQRType
   contact: ScannedContact
+}
+
+/** Result of parsing a scanned code, including its integrity verdict. */
+export interface ParseResult {
+  contact: Partial<ScannedContact>
+  trust: TrustLevel
+  /** Server-side format label, e.g. `vcard`, `connectqr-offline-v2`. */
+  format: string
 }

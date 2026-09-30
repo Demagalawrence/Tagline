@@ -1,70 +1,108 @@
-import { Injectable } from '@nestjs/common'
-import * as crypto from 'crypto'
+import { Injectable, Logger } from '@nestjs/common'
 import { UserProfile, PrivacySettings, ScannedContact, QRType } from '../common/types'
+import {
+  buildMeCard,
+  buildVCard,
+  parseContactPayload,
+} from '../common/contactFormat'
+import { SigningService } from '../signing/signing.service'
+import { KeysService } from '../keys/keys.service'
 
-const PAYLOAD_KEY = process.env.OFFLINE_PAYLOAD_KEY || 'connectqr.offline.v1.appkey'
+export const OFFLINE_PREFIX_V2 = 'connectqr://offline/v2/'
+
+export type PayloadTrust = 'verified' | 'unverified' | 'tampered' | 'none'
+
+export interface ParseResult {
+  contact: Partial<ScannedContact>
+  trust: PayloadTrust
+  format: string
+}
+
+interface OfflinePayloadData {
+  v: 2
+  uid: string
+  n: string
+  kid?: string
+  ts: number
+  t?: string
+  c?: string
+  e?: string
+  b?: string
+  a?: string
+  ph?: string
+  wa?: string
+}
 
 @Injectable()
 export class QrService {
-  generatePayload(user: UserProfile, type: QRType, privacy?: PrivacySettings): string {
+  private readonly logger = new Logger(QrService.name)
+
+  constructor(
+    private readonly signing: SigningService,
+    private readonly keys: KeysService,
+  ) {}
+
+  generatePayload(
+    user: UserProfile,
+    type: QRType | 'vcard' | 'mecard',
+    privacy?: PrivacySettings,
+  ): string {
     switch (type) {
       case 'whatsapp': {
         const digits = user.whatsapp.replace(/[^\d]/g, '')
         return `https://wa.me/${digits}`
       }
+      case 'vcard':
+        return buildVCard({
+          name: user.name,
+          phone: privacy?.showPhone ? user.phone : undefined,
+          whatsapp: privacy?.showWhatsapp ? user.whatsapp : undefined,
+          email: user.email,
+          organization: user.company,
+          title: user.title,
+          url: user.website,
+          note: user.bio,
+        })
+      case 'mecard':
+        return buildMeCard({
+          name: user.name,
+          phone: privacy?.showPhone ? user.phone : undefined,
+          email: user.email,
+          note: user.bio,
+        })
       case 'profile': {
         const slug = user.name.toLowerCase().replace(/\s+/g, '-')
         return `https://connectqr.app/u/${slug || 'profile'}`
       }
       case 'offline':
-        return this.buildOfflinePayload(
-          user,
-          privacy ?? {
-            showPhone: true,
-            showWhatsapp: true,
-            showPhoto: true,
-            allowDiscovery: true,
-            allowOfflineSharing: true,
-          },
+        // Offline payloads are signed, which is asynchronous. Callers must use
+        // buildOfflinePayload (or have the device sign buildUnsignedOfflinePayload),
+        // so reaching this branch means the caller skipped that step.
+        throw new Error(
+          'Offline payloads must be built via buildOfflinePayload; it is async because it signs.',
         )
       default:
         return `https://connectqr.app/u/${user.id}`
     }
   }
 
-  parseScannedPayload(raw: string): Partial<ScannedContact> {
-    const trimmed = raw.trim()
-
-    if (trimmed.startsWith('connectqr://offline/v1/')) {
-      return this.parseOfflinePayload(trimmed)
-    }
-    if (trimmed.includes('wa.me/')) {
-      const match = trimmed.match(/wa\.me\/(\d+)/)
-      const phone = match ? `+${match[1]}` : ''
-      return {
-        name: `WhatsApp Contact (${phone.slice(-4)})`,
-        phone,
-        whatsapp: phone,
-        type: 'whatsapp',
-        rawPayload: trimmed,
-      }
-    }
-    if (trimmed.includes('connectqr.app/u/') || trimmed.startsWith('connectqr://profile')) {
-      const parts = trimmed.split('/u/')
-      const handle = parts[1] || 'profile'
-      const name = handle.charAt(0).toUpperCase() + handle.slice(1).replace(/-/g, ' ')
-      return { name, type: 'profile', rawPayload: trimmed }
-    }
-    return { name: 'Scanned Contact', type: 'unknown', rawPayload: trimmed }
-  }
-
-  private buildOfflinePayload(user: UserProfile, privacy: PrivacySettings): string {
-    const data: Record<string, string | number | boolean> = {
-      v: 1,
+  /**
+   * Assembles an offline payload body. The signature is applied by the device
+   * that owns the key, so this returns the canonical string to sign rather than
+   * a finished code.
+   */
+  buildUnsignedOfflinePayload(
+    user: UserProfile,
+    privacy: PrivacySettings,
+    deviceKeyId?: string,
+  ): { unsigned: string; body: string } {
+    const data: Record<string, string | number> = {
+      v: 2,
       uid: user.id,
       n: user.name.trim() || 'Unknown',
       ts: Date.now(),
     }
+    if (deviceKeyId) data.kid = deviceKeyId
     if (privacy.showPhone && user.phone) data.ph = user.phone
     if (privacy.showWhatsapp && user.whatsapp) data.wa = user.whatsapp
     if (privacy.showPhoto && user.avatar) data.a = user.avatar
@@ -74,53 +112,210 @@ export class QrService {
     if (user.bio) data.b = user.bio
 
     const plain = JSON.stringify(data)
-    const sig = this.sign(plain)
-    return `connectqr://offline/v1/${this.base64UrlEncode(plain)}.${sig}`
+    const encoded = Buffer.from(plain, 'utf8').toString('base64url')
+    // unsigned = exactly the bytes the device must sign.
+    return { unsigned: plain, body: `${OFFLINE_PREFIX_V2}${encoded}` }
   }
 
-  private parseOfflinePayload(raw: string): Partial<ScannedContact> {
-    const body = raw.slice('connectqr://offline/v1/'.length)
+  /** Server-side signing path, used for QR generation while online. */
+  async buildOfflinePayload(
+    user: UserProfile,
+    privacy: PrivacySettings,
+    deviceKeyId?: string,
+  ): Promise<string> {
+    const { unsigned, body } = this.buildUnsignedOfflinePayload(
+      user,
+      privacy,
+      deviceKeyId,
+    )
+    const privateKey = process.env.OFFLINE_SIGNING_PRIVATE_KEY
+    if (!privateKey) {
+      // No server key configured: emit an unsigned payload rather than a
+      // payload signed with a secret that would ship to clients anyway.
+      this.logger.warn(
+        'OFFLINE_SIGNING_PRIVATE_KEY not set; returning unsigned offline payload',
+      )
+      return `${body}.`
+    }
+    const sig = this.signing.signWithPem(unsigned, privateKey)
+    return `${body}.${sig}`
+  }
+
+  async parseScannedPayload(raw: string): Promise<ParseResult> {
+    const trimmed = raw.trim()
+
+    if (trimmed.startsWith(OFFLINE_PREFIX_V2)) {
+      return this.parseOfflinePayload(trimmed)
+    }
+    if (trimmed.startsWith('connectqr://offline/v1/')) {
+      return {
+        contact: {
+          name: 'Legacy offline code (unverifiable)',
+          type: 'unknown',
+          rawPayload: trimmed,
+          bio: 'This code used the old shared-key signature, which could be forged. Treat the details with caution.',
+        },
+        trust: 'unverified',
+        format: 'connectqr-offline-v1',
+      }
+    }
+
+    const contact = parseContactPayload(trimmed)
+    if (contact) {
+      return {
+        contact: {
+          id: `vcard_${Date.now()}`,
+          name: contact.name,
+          phone: contact.phone,
+          whatsapp: contact.whatsapp,
+          email: contact.email,
+          title: contact.title,
+          company: contact.organization,
+          avatar: contact.avatar,
+          bio: contact.note,
+          type: 'profile',
+          rawPayload: trimmed,
+        },
+        trust: 'none',
+        format: contactFormatName(trimmed),
+      }
+    }
+
+    if (trimmed.includes('wa.me/')) {
+      const match = trimmed.match(/wa\.me\/(\d+)/)
+      const phone = match ? `+${match[1]}` : ''
+      return {
+        contact: {
+          name: `WhatsApp Contact (${phone.slice(-4)})`,
+          phone,
+          whatsapp: phone,
+          type: 'whatsapp',
+          rawPayload: trimmed,
+        },
+        trust: 'none',
+        format: 'whatsapp',
+      }
+    }
+
+    if (trimmed.includes('connectqr.app/u/') || trimmed.startsWith('connectqr://profile')) {
+      const parts = trimmed.split('/u/')
+      const handle = parts[1] || 'profile'
+      const name = handle.charAt(0).toUpperCase() + handle.slice(1).replace(/-/g, ' ')
+      return {
+        contact: { name, type: 'profile', rawPayload: trimmed },
+        trust: 'none',
+        format: 'connectqr-profile',
+      }
+    }
+
+    return {
+      contact: { name: 'Scanned Contact', type: 'unknown', rawPayload: trimmed },
+      trust: 'none',
+      format: 'unknown',
+    }
+  }
+
+  private async parseOfflinePayload(raw: string): Promise<ParseResult> {
+    const body = raw.slice(OFFLINE_PREFIX_V2.length)
     const dot = body.lastIndexOf('.')
-    if (dot <= 0) return { name: 'Malformed offline code', type: 'unknown', rawPayload: raw }
+    if (dot <= 0) {
+      return {
+        contact: {
+          name: 'Malformed offline code',
+          type: 'unknown',
+          rawPayload: raw,
+        },
+        trust: 'tampered',
+        format: 'connectqr-offline-v2',
+      }
+    }
 
     const encoded = body.slice(0, dot)
     const receivedSig = body.slice(dot + 1)
 
+    let data: OfflinePayloadData
+    let plain: string
     try {
-      const plain = this.base64UrlDecode(encoded)
-      const data = JSON.parse(plain)
-      const expectedSig = this.sign(plain)
-      if (receivedSig !== expectedSig) {
-        return { name: 'Tampered offline code', type: 'unknown', rawPayload: raw }
-      }
-      return {
-        id: `offline_${data.uid}`,
-        name: data.n,
-        phone: data.ph ?? '',
-        whatsapp: data.wa ?? '',
-        bio: data.b,
-        avatar: data.a,
-        title: data.t,
-        company: data.c,
-        email: data.e,
-        scannedAt: new Date(data.ts).toISOString(),
-        type: 'offline',
-        rawPayload: raw,
+      plain = Buffer.from(encoded, 'base64url').toString('utf8')
+      data = JSON.parse(plain) as OfflinePayloadData
+      if (data?.v !== 2 || !data.uid || !data.n) {
+        return {
+          contact: { name: 'Unsupported offline code', type: 'unknown', rawPayload: raw },
+          trust: 'tampered',
+          format: 'connectqr-offline-v2',
+        }
       }
     } catch {
-      return { name: 'Unparseable offline code', type: 'unknown', rawPayload: raw }
+      return {
+        contact: { name: 'Unparseable offline code', type: 'unknown', rawPayload: raw },
+        trust: 'tampered',
+        format: 'connectqr-offline-v2',
+      }
+    }
+
+    const trust = await this.assessTrust(plain, receivedSig, data.kid)
+
+    const contact: Partial<ScannedContact> = {
+      id: `offline_${data.uid}`,
+      name: data.n,
+      phone: data.ph ?? '',
+      whatsapp: data.wa ?? '',
+      bio: data.b,
+      avatar: data.a,
+      title: data.t,
+      company: data.c,
+      email: data.e,
+      scannedAt: new Date(data.ts).toISOString(),
+      type: 'offline',
+      rawPayload: raw,
+    }
+
+    if (trust === 'tampered') {
+      return {
+        contact: {
+          ...contact,
+          name: 'Rejected offline code',
+          phone: '',
+          whatsapp: '',
+          bio: 'This code failed its signature check and its details were discarded.',
+        },
+        trust,
+        format: 'connectqr-offline-v2',
+      }
+    }
+
+    return { contact, trust, format: 'connectqr-offline-v2' }
+  }
+
+  /**
+   * Resolves trust for an offline payload. A signature that is cryptographically
+   * wrong is rejected outright. A correct signature from a key the server does
+   * not know is reported as `unverified` rather than silently trusted.
+   */
+  private async assessTrust(
+    plain: string,
+    signature: string,
+    deviceKeyId?: string,
+  ): Promise<PayloadTrust> {
+    if (!signature) return 'unverified'
+    if (!deviceKeyId) return 'unverified'
+
+    try {
+      const key = await this.keys.findById(deviceKeyId)
+      if (key.status === 'revoked') return 'tampered'
+      const verdict = await this.signing.verifySignature(
+        plain,
+        signature,
+        key.publicKey,
+      )
+      return verdict.status === 'valid' ? 'verified' : 'tampered'
+    } catch {
+      // Unknown key id: the signature is well-formed but unattributable.
+      return 'unverified'
     }
   }
+}
 
-  private sign(plain: string): string {
-    return crypto.createHash('sha256').update(`${plain}|${PAYLOAD_KEY}`).digest('base64')
-  }
-
-  private base64UrlEncode(str: string): string {
-    return Buffer.from(str).toString('base64url')
-  }
-
-  private base64UrlDecode(str: string): string {
-    return Buffer.from(str, 'base64url').toString('utf8')
-  }
+function contactFormatName(raw: string): string {
+  return /^BEGIN:VCARD/im.test(raw) ? 'vcard' : 'mecard'
 }

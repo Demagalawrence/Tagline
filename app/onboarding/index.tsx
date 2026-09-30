@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAppTheme } from '@/hooks/useAppTheme'
@@ -6,10 +6,12 @@ import { Screen } from '@/components/Screen'
 import { Text } from '@/components/Text'
 import { Button } from '@/components/Button'
 import { QRCard } from '@/components/QRCard'
-import { useProfileStore } from '@/store/useProfileStore'
 import { useOnboardingStore } from '@/store/useOnboardingStore'
-import { qrService } from '@/services/qrService'
+import { CONNECTQR_WEB_BASE } from '@/constants'
 import { spacing } from '@/theme'
+
+/** Example code shown during onboarding, before the user has any profile. */
+const SAMPLE_PROFILE_URL = `${CONNECTQR_WEB_BASE}/u/example`
 
 const STEPS = [
   {
@@ -29,10 +31,7 @@ const STEPS = [
 export default function OnboardingScreen() {
   const { colors } = useAppTheme()
   const router = useRouter()
-  const profile = useProfileStore((s) => s.profile)
   const [step, setStep] = useState(0)
-
-  const payload = useMemo(() => qrService.generatePayload(profile, 'profile'), [profile])
 
   const next = () => {
     if (step < STEPS.length - 1) {
@@ -67,13 +66,14 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.stage}>
+        {/* Onboarding runs before sign-in, so there is no profile yet. Show a
+            labelled example rather than a fabricated contact. */}
         <QRCard
-          payload={payload}
+          payload={SAMPLE_PROFILE_URL}
           type="profile"
           size={180}
-          showLogo
-          logo={profile.avatar}
-          label={profile.name}
+          showLogo={false}
+          label="Your profile"
         />
       </View>
 

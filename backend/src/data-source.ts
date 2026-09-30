@@ -3,6 +3,8 @@ import { DataSource } from 'typeorm'
 import { User } from './entities/user.entity'
 import { Connection } from './entities/connection.entity'
 import { OfflineSession } from './entities/offline-session.entity'
+import { DeviceKey } from './entities/device-key.entity'
+import { AnalyticsEvent } from './entities/analytics-event.entity'
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -12,7 +14,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER ?? 'connectqr',
   password: process.env.DB_PASSWORD ?? 'connectqr',
   database: process.env.DB_NAME ?? 'connectqr',
-  entities: [User, Connection, OfflineSession],
+  entities: [User, Connection, OfflineSession, DeviceKey, AnalyticsEvent],
   migrations: ['src/migrations/*.ts'],
   migrationsTableName: 'migrations',
   // Schema changes must go through migrations; never auto-sync from the CLI.

@@ -3,7 +3,7 @@ import { useAppTheme } from '@/hooks/useAppTheme'
 import { Text } from '@/components/Text'
 import { radius, spacing } from '@/theme'
 
-type Tone = 'neutral' | 'success' | 'warning' | 'info' | 'accent'
+type Tone = 'neutral' | 'success' | 'warning' | 'info' | 'accent' | 'danger'
 
 interface StatusBadgeProps {
   label: string
@@ -30,6 +30,12 @@ export function StatusBadge({ label, tone = 'neutral', dot = false }: StatusBadg
         }
       case 'info':
         return { bg: colors.statusInfoBg, fg: colors.statusInfo, dotColor: colors.statusInfo }
+      case 'danger':
+        return {
+          bg: colors.statusDangerBg,
+          fg: colors.statusDanger,
+          dotColor: colors.statusDanger,
+        }
       case 'accent':
         return { bg: colors.primaryLight, fg: colors.primary, dotColor: colors.primary }
       default:

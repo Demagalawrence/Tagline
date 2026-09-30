@@ -1,13 +1,18 @@
+import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useAppTheme } from '@/hooks/useAppTheme'
 import { Text } from '@/components/Text'
 import { Avatar } from '@/components/Avatar'
-import { StatusBadge } from '@/components/StatusBadge'
 import { Icon } from '@/components/Icon'
 import { QrCode } from '@/features/qr/QrCode'
 import { radius, spacing } from '@/theme'
 import { UserProfile } from '@/types'
 import { qrService } from '@/services/qrService'
+import { CONNECTQR_WEB_BASE } from '@/constants'
+
+function localProfileUrl(user: UserProfile): string {
+  return `${CONNECTQR_WEB_BASE}/u/${user.id}`
+}
 
 interface ProfileCardProps {
   user: UserProfile
@@ -17,7 +22,25 @@ interface ProfileCardProps {
 
 export function ProfileCard({ user, showQr = true, onPress }: ProfileCardProps) {
   const { colors } = useAppTheme()
-  const payload = qrService.generatePayload(user, 'profile')
+  // Generation is async (it may consult the server), so it cannot happen during
+  // render. A profile link is device-local and needs no request, so fall back to
+  // it immediately and let the server version replace it if it differs.
+  const [payload, setPayload] = useState(() => localProfileUrl(user))
+
+  useEffect(() => {
+    let active = true
+    void qrService
+      .generatePayload(user, 'profile')
+      .then((value) => {
+        if (active) setPayload(value)
+      })
+      .catch(() => {
+        if (active) setPayload(localProfileUrl(user))
+      })
+    return () => {
+      active = false
+    }
+  }, [user])
 
   const body = (
     <>
@@ -31,7 +54,6 @@ export function ProfileCard({ user, showQr = true, onPress }: ProfileCardProps) 
             {user.phone}
           </Text>
         </View>
-        <StatusBadge label="Premium" tone="accent" />
       </View>
 
       {user.bio ? (

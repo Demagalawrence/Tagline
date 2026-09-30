@@ -1,18 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useCameraPermissions, BarcodeScanningResult } from 'expo-camera'
 import { qrService } from '@/services/qrService'
-import { ScanSummary, ScannedQRType, ScannedContact } from '@/types'
-import { successHaptic } from '@/utils/haptics'
+import { ParseResult, ScanSummary, ScannedQRType, ScannedContact, TrustLevel } from '@/types'
+import { successHaptic, errorHaptic } from '@/utils/haptics'
 
 const SCAN_COOLDOWN_MS = 1800
 
 export type ScannerStatus = 'loading' | 'permission' | 'ready' | 'error'
 
+export interface ScanSummaryWithTrust extends ScanSummary {
+  trust: TrustLevel
+}
+
 export function useScanner() {
   const [permission, requestPermission] = useCameraPermissions()
   const [torchOn, setTorchOn] = useState(false)
   const [mountError, setMountError] = useState(false)
-  const [scanned, setScanned] = useState<ScanSummary | null>(null)
+  const [scanned, setScanned] = useState<ScanSummaryWithTrust | null>(null)
   const cooldownRef = useRef(false)
 
   const status: ScannerStatus = !permission
@@ -30,11 +34,24 @@ export function useScanner() {
     const data = result.data?.trim() ?? ''
     if (!data) return
 
-    const partial = await qrService.parseScannedPayload(data)
+    let parsed: ParseResult
+    try {
+      parsed = await qrService.parseScannedPayload(data)
+    } catch {
+      cooldownRef.current = false
+      return
+    }
+    const partial = parsed.contact
     const type: ScannedQRType = partial.type ?? 'unknown'
 
-    if (type !== 'unknown') {
-      void successHaptic()
+    // Only claim success for a code we actually understood, and warn loudly on
+    // one that failed its integrity check.
+    if (parsed.trust === 'verified' || parsed.trust === 'none') {
+      if (type !== 'unknown') {
+        void successHaptic()
+      }
+    } else {
+      void errorHaptic()
     }
 
     const contact: ScannedContact = {
@@ -52,7 +69,7 @@ export function useScanner() {
       rawPayload: data,
     }
 
-    setScanned({ type, contact })
+    setScanned({ type, contact, trust: parsed.trust })
 
     // Re-enable scanning shortly after so the user can scan again if they cancel.
     setTimeout(() => {

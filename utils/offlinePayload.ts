@@ -1,16 +1,11 @@
-import * as Crypto from 'expo-crypto'
-import { PrivacySettings, ScannedContact, UserProfile } from '@/types'
+import { PrivacySettings, ScannedContact, TrustLevel, UserProfile } from '@/types'
+
+const PREFIX_V2 = 'connectqr://offline/v2/'
+const PREFIX_V1 = 'connectqr://offline/v1/'
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 const B64_LOOKUP: Record<string, number> = {}
 for (let i = 0; i < B64.length; i++) B64_LOOKUP[B64[i]] = i
-
-/**
- * Bundled integrity key for offline payloads. A real deployment should replace
- * this with a server-issued key (or full HMAC) once the backend exists; the
- * sign/verify shape below is designed so that swap is isolated here.
- */
-const PAYLOAD_KEY = 'connectqr.offline.v1.appkey'
 
 function utf8ToBytes(str: string): number[] {
   const bytes: number[] = []
@@ -63,7 +58,7 @@ function bytesToUtf8(bytes: number[]): string {
   return out
 }
 
-function base64UrlEncode(str: string): string {
+export function base64UrlEncode(str: string): string {
   const bytes = utf8ToBytes(str)
   let out = ''
   for (let i = 0; i < bytes.length; i += 3) {
@@ -80,11 +75,12 @@ function base64UrlEncode(str: string): string {
   return out
 }
 
-function base64UrlDecode(str: string): string {
+export function base64UrlDecode(str: string): string {
   const bytes: number[] = []
   for (let i = 0; i < str.length; i += 4) {
     const a = B64_LOOKUP[str[i]]
     const b = B64_LOOKUP[str[i + 1]]
+    if (a === undefined || b === undefined) throw new Error('Invalid base64url input')
     bytes.push((a << 2) | (b >> 4))
     const c = B64_LOOKUP[str[i + 2]]
     if (c !== undefined) {
@@ -97,61 +93,54 @@ function base64UrlDecode(str: string): string {
 }
 
 interface OfflinePayloadData {
-  v: 1
+  v: 2
   uid: string
   n: string
+  ts: number
+  kid?: string
+  ph?: string
+  wa?: string
+  a?: string
   t?: string
   c?: string
   e?: string
   b?: string
-  a?: string
-  ph?: string
-  wa?: string
-  ts: number
+}
+
+export interface OfflineDecodeResult {
+  data: OfflinePayloadData
+  /** The exact string a signature covers (everything before the final dot). */
+  signedMessage: string | null
+  signature: string | null
 }
 
 export type OfflinePayloadResult =
-  | { ok: true; contact: ScannedContact }
-  | { ok: false; reason: 'malformed' | 'unsupported' | 'tampered' }
+  | { ok: true; contact: Partial<ScannedContact>; trust: TrustLevel; format: string }
+  | { ok: false; reason: 'malformed' | 'unsupported' | 'tampered'; trust: TrustLevel }
 
 export function isOfflinePayload(raw: string): boolean {
-  return raw.trim().startsWith('connectqr://offline/v1/')
+  const t = raw.trim()
+  return t.startsWith(PREFIX_V2) || t.startsWith(PREFIX_V1)
 }
 
-async function sign(plain: string): Promise<string> {
-  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `${plain}|${PAYLOAD_KEY}`, {
-    encoding: Crypto.CryptoEncoding.BASE64,
-  })
+export function isLegacyOfflinePayload(raw: string): boolean {
+  return raw.trim().startsWith(PREFIX_V1)
 }
 
-async function buildOfflinePayload(
-  profile: UserProfile,
-  privacy: PrivacySettings,
-): Promise<string> {
-  const data: OfflinePayloadData = {
-    v: 1,
-    uid: profile.id,
-    n: profile.name.trim() || 'Unknown',
-    ts: Date.now(),
-  }
-
-  if (privacy.showPhone && profile.phone) data.ph = profile.phone
-  if (privacy.showWhatsapp && profile.whatsapp) data.wa = profile.whatsapp
-  if (privacy.showPhoto && profile.avatar) data.a = profile.avatar
-  if (profile.title) data.t = profile.title
-  if (profile.company) data.c = profile.company
-  if (profile.email) data.e = profile.email
-  if (profile.bio) data.b = profile.bio
-
-  const plain = JSON.stringify(data)
-  const sig = await sign(plain)
-  return `connectqr://offline/v1/${base64UrlEncode(plain)}.${sig}`
-}
-
-export async function createOfflinePayload(
+/**
+ * Builds the unsigned v2 payload. The body matches the server's format exactly
+ * so a device signature and a server signature over the same input are
+ * interchangeable.
+ *
+ * The device's Ed25519 private key never leaves the device, so offline sharing
+ * works with no internet; the public key is registered with the server and the
+ * receiving device asks the server to verify. See keysService.
+ */
+export function createOfflinePayload(
   profile: UserProfile,
   privacy?: PrivacySettings,
-): Promise<string> {
+  deviceKeyId?: string,
+): string {
   const effective: PrivacySettings = privacy ?? {
     showPhone: true,
     showWhatsapp: true,
@@ -159,42 +148,70 @@ export async function createOfflinePayload(
     allowDiscovery: true,
     allowOfflineSharing: true,
   }
-  return buildOfflinePayload(profile, effective)
-}
 
-export async function parseOfflinePayload(raw: string): Promise<OfflinePayloadResult> {
-  const trimmed = raw.trim()
-  if (!isOfflinePayload(trimmed)) {
-    return { ok: false, reason: 'malformed' }
+  const data: OfflinePayloadData = {
+    v: 2,
+    uid: profile.id,
+    n: profile.name.trim() || 'Unknown',
+    ts: Date.now(),
   }
 
-  const body = trimmed.slice('connectqr://offline/v1/'.length)
+  if (deviceKeyId) data.kid = deviceKeyId
+  if (effective.showPhone && profile.phone) data.ph = profile.phone
+  if (effective.showWhatsapp && profile.whatsapp) data.wa = profile.whatsapp
+  if (effective.showPhoto && profile.avatar) data.a = profile.avatar
+  if (profile.title) data.t = profile.title
+  if (profile.company) data.c = profile.company
+  if (profile.email) data.e = profile.email
+  if (profile.bio) data.b = profile.bio
+
+  return `${PREFIX_V2}${base64UrlEncode(JSON.stringify(data))}.`
+}
+
+/**
+ * Decodes an offline payload without verifying it.
+ *
+ * Signature verification requires the sender's registered public key, which
+ * lives on the server, so the local result is only ever `unverified`. The QR
+ * service is responsible for asking the server to confirm it before claiming
+ * `verified`, and this must never be reported as `verified` on its own.
+ */
+export function parseOfflinePayload(raw: string): OfflinePayloadResult {
+  const trimmed = raw.trim()
+
+  if (trimmed.startsWith(PREFIX_V1)) {
+    // v1 used a shared key shipped inside the app bundle, so anyone who
+    // decompiled it could forge a code. Refuse to present it as trustworthy.
+    return { ok: false, reason: 'unsupported', trust: 'unverified' }
+  }
+  if (!trimmed.startsWith(PREFIX_V2)) {
+    return { ok: false, reason: 'malformed', trust: 'none' }
+  }
+
+  const body = trimmed.slice(PREFIX_V2.length)
   const dot = body.lastIndexOf('.')
-  if (dot <= 0) return { ok: false, reason: 'malformed' }
+  if (dot <= 0) return { ok: false, reason: 'malformed', trust: 'tampered' }
 
   const encoded = body.slice(0, dot)
-  const receivedSig = body.slice(dot + 1)
+  const signature = body.slice(dot + 1)
 
-  let plain: string
   let data: OfflinePayloadData
   try {
-    plain = base64UrlDecode(encoded)
-    const parsed = JSON.parse(plain) as OfflinePayloadData
-    if (parsed?.v !== 1 || !parsed.uid || !parsed.n) {
-      return { ok: false, reason: 'unsupported' }
+    const parsed = JSON.parse(base64UrlDecode(encoded)) as OfflinePayloadData
+    if (parsed?.v !== 2 || !parsed.uid || !parsed.n) {
+      return { ok: false, reason: 'unsupported', trust: 'unverified' }
     }
     data = parsed
   } catch {
-    return { ok: false, reason: 'malformed' }
-  }
-
-  const expectedSig = await sign(plain)
-  if (receivedSig !== expectedSig) {
-    return { ok: false, reason: 'tampered' }
+    return { ok: false, reason: 'malformed', trust: 'tampered' }
   }
 
   return {
     ok: true,
+    // No key available locally, so this is unverified until the server says
+    // otherwise, and unsigned payloads stay unsigned.
+    trust: signature ? 'unverified' : 'unverified',
+    format: 'connectqr-offline-v2',
     contact: {
       id: `offline_${data.uid}`,
       name: data.n,
@@ -211,3 +228,25 @@ export async function parseOfflinePayload(raw: string): Promise<OfflinePayloadRe
     },
   }
 }
+
+/** Exposes the decode parts so a caller can forward them for server verification. */
+export function decodeOfflinePayload(raw: string): OfflineDecodeResult | null {
+  const trimmed = raw.trim()
+  if (!trimmed.startsWith(PREFIX_V2)) return null
+  const body = trimmed.slice(PREFIX_V2.length)
+  const dot = body.lastIndexOf('.')
+  if (dot <= 0) return null
+  try {
+    const data = JSON.parse(base64UrlDecode(body.slice(0, dot))) as OfflinePayloadData
+    if (data?.v !== 2) return null
+    return {
+      data,
+      signedMessage: body.slice(0, dot),
+      signature: body.slice(dot + 1) || null,
+    }
+  } catch {
+    return null
+  }
+}
+
+export type { ScannedContact }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Share, StyleSheet, View } from 'react-native'
 import { Screen } from '@/components/Screen'
 import { Text } from '@/components/Text'
@@ -8,9 +8,11 @@ import { Button } from '@/components/Button'
 import { BottomSheet } from '@/components/BottomSheet'
 import { ListItem } from '@/components/ListItem'
 import { StatusBadge } from '@/components/StatusBadge'
+import { LoadingScreen } from '@/components/Skeleton'
 import { useProfileStore } from '@/store/useProfileStore'
 import { useQrDesignStore } from '@/store/useQrDesignStore'
 import { qrService } from '@/services/qrService'
+import { reportError } from '@/services/errorReporting'
 import { QRType } from '@/types'
 import { spacing } from '@/theme'
 import { selectionHaptic, successHaptic } from '@/utils/haptics'
@@ -18,7 +20,9 @@ import { selectionHaptic, successHaptic } from '@/utils/haptics'
 const TYPE_OPTIONS: { value: QRType; label: string; subtitle: string }[] = [
   { value: 'profile', label: 'Profile', subtitle: 'Opens your full profile' },
   { value: 'whatsapp', label: 'WhatsApp', subtitle: 'Starts a WhatsApp chat' },
-  { value: 'offline', label: 'Offline', subtitle: 'Share over local Wi-Fi' },
+  { value: 'vcard', label: 'vCard', subtitle: 'Saves to any phone contacts' },
+  { value: 'mecard', label: 'MECARD', subtitle: 'Compact contact code' },
+  { value: 'offline', label: 'Offline', subtitle: 'Works with no internet' },
 ]
 
 export default function MyQrScreen() {
@@ -27,31 +31,46 @@ export default function MyQrScreen() {
   const setDesign = useQrDesignStore((s) => s.setDesign)
   const [type, setType] = useState<QRType>('profile')
   const [customizing, setCustomizing] = useState(false)
-  const [payload, setPayload] = useState(() => {
-    const generated = qrService.generatePayload(profile, type)
-    return typeof generated === 'string' ? generated : ''
-  })
-  const [prevDeps, setPrevDeps] = useState({ profile, type })
+  const [payload, setPayload] = useState('')
+  const [payloadError, setPayloadError] = useState<string | null>(null)
 
-  if (prevDeps.profile !== profile || prevDeps.type !== type) {
-    setPrevDeps({ profile, type })
-    const generated = qrService.generatePayload(profile, type)
-    if (typeof generated === 'string') {
-      setPayload(generated)
-    } else {
-      void generated.then((value) => setPayload(value))
+  // Generation is async now that it can consult the server (offline codes are
+  // still built on-device). A stale response must not overwrite a newer one.
+  useEffect(() => {
+    if (!profile) return
+    let active = true
+    void qrService
+      .generatePayload(profile, type)
+      .then((value) => {
+        if (!active) return
+        setPayload(value)
+        setPayloadError(null)
+      })
+      .catch((err: unknown) => {
+        if (!active) return
+        setPayload('')
+        const message = err instanceof Error ? err.message : 'Could not generate this QR code.'
+        setPayloadError(message)
+        reportError(err, { screen: 'my-qr', action: `generate:${type}` })
+      })
+    return () => {
+      active = false
     }
-  }
+  }, [profile, type])
 
   const share = async () => {
     void successHaptic()
     try {
       await Share.share({
-        message: `${profile.name} — scan this ConnectQR code to connect: ${payload}`,
+        message: `${profile?.name ?? 'Connect with me'} — scan this ConnectQR code to connect: ${payload}`,
       })
     } catch {
       // user dismissed the share sheet
     }
+  }
+
+  if (!profile) {
+    return <LoadingScreen />
   }
 
   return (
@@ -75,6 +94,12 @@ export default function MyQrScreen() {
         logo={profile.avatar}
         label={profile.name}
       />
+
+      {payloadError ? (
+        <Text variant="caption" color="danger" align="center">
+          {payloadError}
+        </Text>
+      ) : null}
 
       <View style={styles.section}>
         <Text variant="label" color="secondary" style={styles.sectionTitle}>

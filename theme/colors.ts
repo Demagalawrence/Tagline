@@ -25,6 +25,10 @@ export const colors = {
     statusWarningBg: '#FDF3E3',
     statusInfo: '#3B82F6',
     statusInfoBg: '#EDF4FF',
+    // Reserved for hard failures such as a failed integrity check, where a
+    // warning tone would read as too soft.
+    statusDanger: '#DC2626',
+    statusDangerBg: '#FDECEC',
 
     qrBg: '#FFFFFF',
     qrFg: '#0F172A',
@@ -56,6 +60,8 @@ export const colors = {
     statusWarningBg: '#33260F',
     statusInfo: '#60A5FA',
     statusInfoBg: '#142B4D',
+    statusDanger: '#F87171',
+    statusDangerBg: '#3A1416',
 
     qrBg: '#FFFFFF',
     qrFg: '#0F172A',

@@ -10,6 +10,7 @@ import { IconButton } from '@/components/IconButton'
 import { SectionHeader } from '@/components/SectionHeader'
 import { ListItem } from '@/components/ListItem'
 import { EmptyState } from '@/components/EmptyState'
+import { LoadingScreen } from '@/components/Skeleton'
 import { useProfileStore } from '@/store/useProfileStore'
 import { useAuthStore } from '@/store/useAuthStore'
 import { connectionService } from '@/services/connectionService'
@@ -34,7 +35,14 @@ export default function HomeScreen() {
   }, [])
 
   const greeting = useMemo(() => greetingForHour(new Date().getHours()), [])
-  const displayName = user?.name ?? profile.name
+  const displayName = user?.name ?? profile?.name ?? ''
+
+  // Reachable only while authenticated, but the profile is fetched separately
+  // from the session, so it can briefly be absent. Show a skeleton rather than
+  // rendering a placeholder person.
+  if (!profile) {
+    return <LoadingScreen />
+  }
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>

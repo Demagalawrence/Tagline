@@ -56,4 +56,14 @@ export class AuthService {
     const user = await this.users.findOneBy({ id })
     return user ? user.toProfile() : null
   }
+
+  /**
+   * Issues a new token for an already-authenticated user. Used by the mobile
+   * client to extend a session without re-sending a password.
+   */
+  async refresh(userId: string) {
+    const user = await this.users.findOneBy({ id: userId })
+    if (!user) throw new UnauthorizedException('Account no longer exists')
+    return { user: user.toProfile(), token: this.jwt.sign({ sub: user.id }) }
+  }
 }

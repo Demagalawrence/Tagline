@@ -13,8 +13,8 @@ import { qrService } from '@/services/qrService'
 import { whatsappService } from '@/features/whatsapp/whatsappService'
 import { callService } from '@/features/calls/callService'
 import { contactsService } from '@/features/contacts/contactsService'
-import { ScannedContact } from '@/types'
-import { spacing } from '@/theme'
+import { ScannedContact, TrustLevel } from '@/types'
+import { radius, spacing } from '@/theme'
 import { successHaptic, warningHaptic, errorHaptic } from '@/utils/haptics'
 
 type Action = 'whatsapp' | 'call' | 'save' | null
@@ -24,29 +24,47 @@ export default function ScannedContactScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{ payload?: string; id?: string }>()
   const [contact, setContact] = useState<ScannedContact | null>(null)
+  const [trust, setTrust] = useState<TrustLevel>('none')
   const [action, setAction] = useState<Action>(null)
 
   useEffect(() => {
     if (!params.payload) return
     let active = true
     const raw = decodeURIComponent(params.payload)
-    void qrService.parseScannedPayload(raw).then((partial) => {
-      if (!active) return
-      setContact({
-        id: params.id ?? `scanned_${Date.now()}`,
-        name: partial.name ?? 'Unknown contact',
-        phone: partial.phone ?? '',
-        whatsapp: partial.whatsapp ?? '',
-        bio: partial.bio,
-        avatar: partial.avatar,
-        title: partial.title,
-        company: partial.company,
-        email: partial.email,
-        scannedAt: new Date().toISOString(),
-        type: partial.type ?? 'unknown',
-        rawPayload: raw,
+    void qrService
+      .parseScannedPayload(raw)
+      .then(({ contact: partial, trust: verdict }) => {
+        if (!active) return
+        setTrust(verdict)
+        setContact({
+          id: params.id ?? `scanned_${Date.now()}`,
+          name: partial.name ?? 'Unknown contact',
+          phone: partial.phone ?? '',
+          whatsapp: partial.whatsapp ?? '',
+          bio: partial.bio,
+          avatar: partial.avatar,
+          title: partial.title,
+          company: partial.company,
+          email: partial.email,
+          scannedAt: new Date().toISOString(),
+          type: partial.type ?? 'unknown',
+          rawPayload: raw,
+        })
       })
-    })
+      .catch(() => {
+        if (!active) return
+        setTrust('tampered')
+        setContact({
+          id: params.id ?? `scanned_${Date.now()}`,
+          name: 'Could not read this code',
+          phone: '',
+          whatsapp: '',
+          bio: 'Something went wrong while reading this QR code.',
+          scannedAt: new Date().toISOString(),
+          type: 'unknown',
+          rawPayload: raw,
+        })
+      })
     return () => {
       active = false
     }
@@ -58,12 +76,43 @@ export default function ScannedContactScreen() {
         return <StatusBadge label="WhatsApp" tone="success" />
       case 'offline':
         return <StatusBadge label="Offline" tone="info" />
+      case 'vcard':
+        return <StatusBadge label="vCard" tone="neutral" />
+      case 'mecard':
+        return <StatusBadge label="MECARD" tone="neutral" />
       case 'profile':
         return <StatusBadge label="ConnectQR" tone="accent" />
       default:
         return <StatusBadge label="Contact" tone="neutral" />
     }
   }, [contact?.type])
+
+  // Only signed formats can be verified. vCard/MECARD/WhatsApp codes are plain
+  // data, so claiming they were "verified" would be meaningless.
+  const trustBanner = useMemo(() => {
+    switch (trust) {
+      case 'verified':
+        return {
+          tone: 'success' as const,
+          label: 'Verified',
+          body: 'The signature on this code matches a registered device key.',
+        }
+      case 'unverified':
+        return {
+          tone: 'warning' as const,
+          label: 'Unverified',
+          body: 'This code carries no signature we can check. Be careful with the details.',
+        }
+      case 'tampered':
+        return {
+          tone: 'danger' as const,
+          label: 'Rejected',
+          body: 'This code failed its integrity check, so its details have been hidden.',
+        }
+      default:
+        return null
+    }
+  }, [trust])
 
   const onWhatsApp = async () => {
     if (!contact) return
@@ -146,6 +195,21 @@ export default function ScannedContactScreen() {
         ) : null}
       </Card>
 
+      {trustBanner ? (
+        <View
+          style={[
+            styles.trustBanner,
+            { backgroundColor: colors.statusWarningBg, borderColor: colors.border },
+          ]}
+          accessibilityRole="alert"
+        >
+          <StatusBadge label={trustBanner.label} tone={trustBanner.tone} />
+          <Text variant="caption" color="secondary" style={styles.trustBody}>
+            {trustBanner.body}
+          </Text>
+        </View>
+      ) : null}
+
       <View style={styles.actions}>
         <Button
           label="WhatsApp"
@@ -204,6 +268,18 @@ const styles = StyleSheet.create({
   },
   bio: {
     marginTop: spacing.lg,
+  },
+  trustBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginTop: spacing.lg,
+  },
+  trustBody: {
+    flex: 1,
   },
   actions: {
     gap: spacing.md,

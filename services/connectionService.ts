@@ -1,5 +1,5 @@
 import * as Crypto from 'expo-crypto'
-import { ScannedContact, NearbyDevice, OfflineSession } from '../types'
+import { ScannedContact, NearbyDevice, OfflineSession, ActivityFeed } from '../types'
 import { useScanHistoryStore } from '../store/useScanHistoryStore'
 import { peerService } from './peerService'
 import { apiRequest } from './api'
@@ -11,6 +11,7 @@ export interface ConnectionService {
   getNearbyDevices(): Promise<NearbyDevice[]>
   startOfflineSession(): Promise<OfflineSession>
   stopOfflineSession(): Promise<boolean>
+  getActivity(): Promise<ActivityFeed>
 }
 
 export class ApiConnectionService implements ConnectionService {
@@ -89,6 +90,15 @@ export class ApiConnectionService implements ConnectionService {
         isSharing: true,
         connectedDevices: peers,
       }
+    }
+  }
+
+  async getActivity(): Promise<ActivityFeed> {
+    try {
+      return await apiRequest<ActivityFeed>('/api/connections/activity', { auth: true })
+    } catch {
+      const connections = await this.getRecentConnections()
+      return { connections, account: null }
     }
   }
 

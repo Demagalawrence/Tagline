@@ -43,6 +43,9 @@ export class Connection {
   @Column({ default: '' })
   rawPayload: string
 
+  @Column({ type: 'text', array: true, default: '{}' })
+  tags: string[]
+
   toContact(): ScannedContact {
     return {
       id: this.id,
@@ -58,6 +61,7 @@ export class Connection {
         this.scannedAt instanceof Date ? this.scannedAt.toISOString() : String(this.scannedAt),
       type: (this.type as ScannedContact['type']) || 'unknown',
       rawPayload: this.rawPayload,
+      tags: this.tags,
     }
   }
 }

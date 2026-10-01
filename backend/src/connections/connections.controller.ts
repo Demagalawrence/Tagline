@@ -35,4 +35,10 @@ export class ConnectionsController {
   getNearby(@Request() req: AuthenticatedRequest) {
     return this.connections.getNearbyDevices(req.user.sub)
   }
+
+  @Get('activity')
+  @ApiOperation({ summary: 'Recent connections and account-level activity' })
+  getActivity(@Request() req: AuthenticatedRequest) {
+    return this.connections.getActivity(req.user.sub)
+  }
 }

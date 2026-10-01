@@ -3,11 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { v4 as uuid } from 'uuid'
 import { Connection } from '../entities/connection.entity'
+import { User } from '../entities/user.entity'
 import { ScannedContact, NearbyDevice } from '../common/types'
 
 @Injectable()
 export class ConnectionsService {
-  constructor(@InjectRepository(Connection) private connections: Repository<Connection>) {}
+  constructor(
+    @InjectRepository(Connection) private connections: Repository<Connection>,
+    @InjectRepository(User) private users: Repository<User>,
+  ) {}
 
   async getRecent(userId: string): Promise<ScannedContact[]> {
     const rows = await this.connections.find({
@@ -32,9 +36,38 @@ export class ConnectionsService {
       scannedAt: new Date(contact.scannedAt ?? Date.now()),
       type: contact.type,
       rawPayload: contact.rawPayload ?? '',
+      tags: contact.tags?.length ? contact.tags : [contact.type ?? 'unknown'],
     })
     const saved = await this.connections.save(entity)
     return saved.toContact()
+  }
+
+  /**
+   * Recent connection entries plus the account-level picture the app shows on
+   * its "Activity" screen - a single request instead of three.
+   */
+  async getActivity(userId: string) {
+    const [rows, user] = await Promise.all([
+      this.connections.find({ where: { userId }, order: { scannedAt: 'DESC' } }),
+      this.users.findOneBy({ id: userId }),
+    ])
+    return {
+      connections: rows.map((row) => row.toContact()),
+      account: user
+        ? {
+            name: user.name,
+            email: user.email,
+            emailVerified: user.emailVerified,
+            scanCount: user.scanCount,
+            lastScannedAt:
+              user.lastScannedAt instanceof Date
+                ? user.lastScannedAt.toISOString()
+                : user.lastScannedAt
+                  ? String(user.lastScannedAt)
+                  : undefined,
+          }
+        : null,
+    }
   }
 
   async delete(userId: string, contactId: string): Promise<boolean> {

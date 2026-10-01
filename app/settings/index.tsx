@@ -33,6 +33,18 @@ export default function SettingsScreen() {
             subtitle="Sessions & sign-out"
             leftIcon="shield-checkmark-outline"
             onPress={() => router.push('/settings/security')}
+          />
+          <ListItem
+            title="Privacy Policy"
+            subtitle="How your data is handled"
+            leftIcon="document-text-outline"
+            onPress={() => router.push('/settings/privacy-policy')}
+          />
+          <ListItem
+            title="Terms of Service"
+            subtitle="Rules for using ConnectQR"
+            leftIcon="reader-outline"
+            onPress={() => router.push('/settings/terms')}
             last
           />
         </Card>

@@ -55,7 +55,7 @@ export default function HomeScreen() {
         </View>
         <IconButton
           name="notifications-outline"
-          onPress={() => {}}
+          onPress={() => router.push('/activity')}
           accessibilityLabel="Notifications"
           size={44}
           variant="soft"
@@ -96,7 +96,7 @@ export default function HomeScreen() {
         <SectionHeader
           title="Recent connections"
           actionLabel={connections && connections.length > 0 ? 'See all' : undefined}
-          onAction={() => router.push('/offline/nearby')}
+          onAction={() => router.push('/connections')}
         />
         {connections === null ? null : connections.length === 0 ? (
           <EmptyState
@@ -114,7 +114,7 @@ export default function HomeScreen() {
                 title={c.name}
                 subtitle={`${c.title ?? 'ConnectQR'} · ${timeAgo(c.scannedAt)}`}
                 leftIcon="person-outline"
-                onPress={() => router.push('/offline/nearby')}
+                onPress={() => router.push('/connections')}
                 last={i === Math.min(connections.length, 3) - 1}
               />
             ))}

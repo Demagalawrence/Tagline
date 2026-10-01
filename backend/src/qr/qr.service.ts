@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
 import { UserProfile, PrivacySettings, ScannedContact, QRType } from '../common/types'
 import {
   buildMeCard,
@@ -7,6 +9,8 @@ import {
 } from '../common/contactFormat'
 import { SigningService } from '../signing/signing.service'
 import { KeysService } from '../keys/keys.service'
+import { User } from '../entities/user.entity'
+import { AnalyticsService } from '../analytics/analytics.service'
 
 export const OFFLINE_PREFIX_V2 = 'connectqr://offline/v2/'
 
@@ -40,6 +44,8 @@ export class QrService {
   constructor(
     private readonly signing: SigningService,
     private readonly keys: KeysService,
+    @InjectRepository(User) private readonly users: Repository<User>,
+    private readonly analytics: AnalyticsService,
   ) {}
 
   generatePayload(
@@ -215,23 +221,32 @@ export class QrService {
     }
   }
 
+  /**
+   * Records a scan against the owner account: bumps their lifetime counter and
+   * write the timestamp so the profile screen can show "N scans". Fire-and-
+   * forget by design - parsing results must never be blocked on analytics.
+   */
+  private async recordScan(uid: string, trust: PayloadTrust): Promise<void> {
+    try {
+      await this.users.increment({ id: uid }, 'scanCount', 1)
+      await this.users.update(uid, { lastScannedAt: new Date() })
+      await this.analytics.track({ name: 'qr.scanned', userId: uid, properties: { trust } })
+    } catch {
+      // Unknown or deleted owner: nothing to record, and no reason to fail parse.
+    }
+  }
+
   private async parseOfflinePayload(raw: string): Promise<ParseResult> {
     const body = raw.slice(OFFLINE_PREFIX_V2.length)
-    const dot = body.lastIndexOf('.')
-    if (dot <= 0) {
-      return {
-        contact: {
-          name: 'Malformed offline code',
-          type: 'unknown',
-          rawPayload: raw,
-        },
-        trust: 'tampered',
-        format: 'connectqr-offline-v2',
-      }
-    }
 
-    const encoded = body.slice(0, dot)
-    const receivedSig = body.slice(dot + 1)
+    // A payload is `<encoded>.<signature>`. An unsigned code has no separator at
+    // all: the server emits one whenever no signing key is configured, and the
+    // device appends the signature after signing. Treat that whole string as the
+    // body and let the missing signature settle trust as `unverified` instead of
+    // rejecting an otherwise well-formed code.
+    const dot = body.lastIndexOf('.')
+    const encoded = dot > 0 ? body.slice(0, dot) : body
+    const receivedSig = dot > 0 ? body.slice(dot + 1) : ''
 
     let data: OfflinePayloadData
     let plain: string
@@ -254,6 +269,12 @@ export class QrService {
     }
 
     const trust = await this.assessTrust(plain, receivedSig, data.kid)
+
+    // Owners get scan analytics whenever one of their integrity-protected codes
+    // is parsed successfully (default online, offline, or legacy device link).
+    if (trust !== 'tampered') {
+      await this.recordScan(data.uid, trust)
+    }
 
     const contact: Partial<ScannedContact> = {
       id: `offline_${data.uid}`,

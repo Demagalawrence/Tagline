@@ -16,6 +16,7 @@ export default function ForgotPasswordScreen() {
   const router = useRouter()
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [devToken, setDevToken] = useState<string | undefined>(undefined)
 
   const { control, handleSubmit } = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -24,8 +25,9 @@ export default function ForgotPasswordScreen() {
 
   const onSubmit = async (values: ForgotPasswordFormValues) => {
     setLoading(true)
-    await authService.forgotPassword(values.email)
+    const res = await authService.forgotPassword(values.email)
     setLoading(false)
+    setDevToken(res.devResetToken)
     setSent(true)
     void successHaptic()
   }
@@ -47,6 +49,16 @@ export default function ForgotPasswordScreen() {
           <Text variant="body" color="secondary" align="center">
             If an account exists for that email, a reset link is on its way.
           </Text>
+          {devToken ? (
+            <Button
+              label="Enter Reset Code"
+              onPress={() =>
+                router.push(`/auth/reset-password?token=${encodeURIComponent(devToken)}`)
+              }
+              fullWidth
+              style={styles.sentAction}
+            />
+          ) : null}
           <Button
             label="Back to sign in"
             onPress={() => router.back()}

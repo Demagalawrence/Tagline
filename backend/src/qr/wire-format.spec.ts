@@ -57,7 +57,9 @@ describe('offline payload wire format (server side)', () => {
   beforeEach(() => {
     keys = { findById: jest.fn() }
     signing = new SigningService()
-    service = new QrService(signing as never, keys as never)
+    service = new QrService(signing as never, keys as never, undefined as never, {
+      track: jest.fn().mockResolvedValue(undefined),
+    } as never)
   })
 
   it('accepts a client-built payload and reads every field', async () => {
@@ -69,6 +71,24 @@ describe('offline payload wire format (server side)', () => {
     expect(result.contact.phone).toBe('+256700999888')
     expect(result.contact.whatsapp).toBe('+256700999888')
     expect(result.contact.email).toBe('ada@example.com')
+  })
+
+  it('accepts an unsigned payload with no signature separator', async () => {
+    const { body } = clientStylePayload()
+    keys.findById.mockRejectedValue(new Error('not found'))
+
+    const result = await service.parseScannedPayload(body)
+    expect(result.contact.name).toBe('Ada Lovelace')
+    expect(result.contact.phone).toBe('+256700999888')
+    expect(result.trust).toBe('unverified')
+  })
+
+  it('still rejects a payload whose body is not decodable', async () => {
+    keys.findById.mockRejectedValue(new Error('not found'))
+
+    const result = await service.parseScannedPayload('connectqr://offline/v2/not-base64-json')
+    expect(result.contact.name).toBe('Unparseable offline code')
+    expect(result.trust).toBe('tampered')
   })
 
   it('verifies a signature produced over the exact client-encoded body', async () => {

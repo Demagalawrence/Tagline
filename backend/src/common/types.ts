@@ -10,6 +10,9 @@ export interface UserProfile {
   email?: string
   location?: string
   website?: string
+  emailVerified?: boolean
+  scanCount?: number
+  lastScannedAt?: string
   createdAt: string
 }
 
@@ -34,6 +37,7 @@ export interface ScannedContact {
   scannedAt: string
   type: 'whatsapp' | 'profile' | 'offline' | 'unknown'
   rawPayload: string
+  tags?: string[]
 }
 
 export interface NearbyDevice {

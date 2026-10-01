@@ -52,7 +52,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const user = await authService.me()
       set({ isAuthenticated: true, user, isHydrated: true, error: null })
       useProfileStore.setState({ profile: user })
-      void useProfileStore.getState().load().catch(() => {})
+      void useProfileStore
+        .getState()
+        .load()
+        .catch(() => {})
     } catch {
       // apiRequest already attempted a refresh; if we are here it is unusable.
       set({ isAuthenticated: false, user: null, isHydrated: true })
@@ -65,7 +68,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const res = await authService.login(email, password)
       useProfileStore.setState({ profile: res.user })
-      void useProfileStore.getState().load().catch(() => {})
+      void useProfileStore
+        .getState()
+        .load()
+        .catch(() => {})
       set({ isAuthenticated: true, user: res.user, isLoading: false, error: null })
       return true
     } catch (err) {
@@ -81,8 +87,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await authService.register(name, email, phone, password)
+      // In local dev the server returns the verification token. Confirm it right
+      // away so the account is usable without a mail provider; in production this
+      // branch never fires and the user confirms via the emailed link.
+      if (res.devVerificationToken) {
+        await authService.verifyEmail(res.devVerificationToken).catch(() => {})
+      }
       useProfileStore.setState({ profile: res.user })
-      void useProfileStore.getState().load().catch(() => {})
+      void useProfileStore
+        .getState()
+        .load()
+        .catch(() => {})
       set({ isAuthenticated: true, user: res.user, isLoading: false, error: null })
       return true
     } catch (err) {

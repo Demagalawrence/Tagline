@@ -39,6 +39,24 @@ export class User {
   @Column()
   passwordHash: string
 
+  @Column({ type: 'boolean', default: false })
+  emailVerified: boolean
+
+  @Column({ nullable: true })
+  verificationToken?: string
+
+  @Column({ nullable: true })
+  resetToken?: string
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetTokenExpiresAt?: Date
+
+  @Column({ type: 'int', default: 0 })
+  scanCount: number
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastScannedAt?: Date
+
   @Column({ type: 'boolean', default: true })
   showPhone: boolean
 
@@ -70,6 +88,10 @@ export class User {
       email: this.email,
       location: this.location,
       website: this.website,
+      emailVerified: this.emailVerified,
+      scanCount: this.scanCount,
+      lastScannedAt:
+        this.lastScannedAt instanceof Date ? this.lastScannedAt.toISOString() : undefined,
       createdAt:
         this.createdAt instanceof Date ? this.createdAt.toISOString() : String(this.createdAt),
     }

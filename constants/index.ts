@@ -1,3 +1,5 @@
+import Constants from 'expo-constants'
+
 export const APP_NAME = 'ConnectQR'
 export const APP_TAGLINE = 'Connect instantly.'
 
@@ -6,9 +8,22 @@ export const CONNECTQR_WEB_BASE =
   'https://connectqr.app'
 export const OFFLINE_SCHEME = 'connectqr://offline'
 
-export const API_BASE_URL =
-  (process.env.EXPO_PUBLIC_API_URL as string | undefined)?.replace(/\/+$/, '') ??
-  'http://localhost:3000'
+/**
+ * Resolve the API host. An explicit EXPO_PUBLIC_API_URL always wins. Otherwise
+ * reuse the host the app was loaded from, because Metro serves the bundle and
+ * the API run on the same machine. That keeps a physical device working after
+ * the machine's LAN address changes (DHCP), instead of needing a new .env.
+ */
+function resolveApiBaseUrl(): string {
+  const explicit = (process.env.EXPO_PUBLIC_API_URL as string | undefined)?.replace(/\/+$/, '')
+  if (explicit) return explicit
+
+  const hostUri = Constants.expoConfig?.hostUri ?? Constants.expoGoConfig?.debuggerHost
+  const host = hostUri?.replace(/^[a-z]+:\/\//i, '').split(':')[0]
+  return host ? `http://${host}:3000` : 'http://localhost:3000'
+}
+
+export const API_BASE_URL = resolveApiBaseUrl()
 
 export const STORAGE_KEYS = {
   onboardingComplete: 'connectqr.onboarding.complete',

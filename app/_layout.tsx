@@ -110,6 +110,8 @@ export default function RootLayout() {
                 options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
               />
               <Stack.Screen name="settings" />
+              <Stack.Screen name="connections" />
+              <Stack.Screen name="activity" />
               <Stack.Screen name="offline" />
             </Stack>
             {!isComplete ? (

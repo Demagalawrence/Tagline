@@ -13,11 +13,12 @@ import { qrService } from '@/services/qrService'
 import { whatsappService } from '@/features/whatsapp/whatsappService'
 import { callService } from '@/features/calls/callService'
 import { contactsService } from '@/features/contacts/contactsService'
+import { shareContactAsVCard } from '@/features/contacts/vcard'
 import { ScannedContact, TrustLevel } from '@/types'
 import { radius, spacing } from '@/theme'
 import { successHaptic, warningHaptic, errorHaptic } from '@/utils/haptics'
 
-type Action = 'whatsapp' | 'call' | 'save' | null
+type Action = 'whatsapp' | 'call' | 'save' | 'share' | null
 
 export default function ScannedContactScreen() {
   const { colors } = useAppTheme()
@@ -137,6 +138,19 @@ export default function ScannedContactScreen() {
     else void warningHaptic()
   }
 
+  const onShareCard = async () => {
+    if (!contact) return
+    setAction('share')
+    try {
+      await shareContactAsVCard(contact)
+      void successHaptic()
+    } catch {
+      void errorHaptic()
+    } finally {
+      setAction(null)
+    }
+  }
+
   const onSave = async () => {
     if (!contact) return
     setAction('save')
@@ -234,6 +248,14 @@ export default function ScannedContactScreen() {
           variant="secondary"
           icon="person-add-outline"
           loading={action === 'save'}
+          fullWidth
+        />
+        <Button
+          label="Share as vCard"
+          onPress={() => void onShareCard()}
+          variant="ghost"
+          icon="share-social-outline"
+          loading={action === 'share'}
           fullWidth
         />
       </View>

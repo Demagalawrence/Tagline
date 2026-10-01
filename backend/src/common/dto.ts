@@ -39,3 +39,22 @@ export class ForgotPasswordDto {
   @IsEmail()
   email: string
 }
+
+export class VerifyEmailDto {
+  @ApiProperty({ example: '5f9d0b1a4e2c2a1f…' })
+  @IsString()
+  @MinLength(8)
+  token: string
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ example: '5f9d0b1a4e2c2a1f…' })
+  @IsString()
+  @MinLength(8)
+  token: string
+
+  @ApiProperty({ example: 'newpassword123' })
+  @IsString()
+  @MinLength(6)
+  password: string
+}

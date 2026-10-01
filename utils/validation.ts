@@ -21,6 +21,16 @@ export const forgotPasswordSchema = z.object({
   email: z.string().trim().email('Enter a valid email address'),
 })
 
+export const resetPasswordSchema = z
+  .object({
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string().min(6, 'Confirm your new password'),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
 export const profileSchema = z.object({
   name: z.string().trim().min(2, 'Name is required'),
   phone: z
@@ -39,4 +49,5 @@ export const profileSchema = z.object({
 export type LoginFormValues = z.infer<typeof loginSchema>
 export type RegisterFormValues = z.infer<typeof registerSchema>
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>
 export type ProfileFormValues = z.infer<typeof profileSchema>

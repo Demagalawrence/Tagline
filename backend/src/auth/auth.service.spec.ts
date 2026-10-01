@@ -1,12 +1,17 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common'
+import { BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Repository } from 'typeorm'
 import { AuthService } from './auth.service'
 import { User } from '../entities/user.entity'
+import { MailService } from './mail.service'
 
 describe('AuthService', () => {
   let service: AuthService
   const jwt = { sign: jest.fn().mockReturnValue('signed-token') }
+  const mail = {
+    sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+    sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+  }
   const users = {
     findOne: jest.fn(),
     findOneBy: jest.fn(),
@@ -16,7 +21,11 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    service = new AuthService(users as unknown as Repository<User>, jwt as unknown as JwtService)
+    service = new AuthService(
+      users as unknown as Repository<User>,
+      jwt as unknown as JwtService,
+      mail as unknown as MailService,
+    )
   })
 
   describe('register', () => {
@@ -105,6 +114,81 @@ describe('AuthService', () => {
 
       await expect(service.login('ghost@example.com', 'whatever')).rejects.toThrow(
         UnauthorizedException,
+      )
+    })
+  })
+
+  describe('verifyEmail', () => {
+    it('confirms the address and clears the token', async () => {
+      const user = new User()
+      Object.assign(user, { id: 'usr_1', emailVerified: false, verificationToken: 'tok123' })
+      users.findOneBy.mockResolvedValue(user)
+
+      await expect(service.verifyEmail('tok123')).resolves.toEqual({ verified: true })
+      expect(users.save).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: true, verificationToken: undefined }),
+      )
+    })
+
+    it('rejects an unknown token', async () => {
+      users.findOneBy.mockResolvedValue(null)
+      await expect(service.verifyEmail('nope')).rejects.toThrow(BadRequestException)
+    })
+  })
+
+  describe('forgotPassword', () => {
+    it('stores an expiring token and emails it', async () => {
+      const user = new User()
+      Object.assign(user, { id: 'usr_1', email: 'jane@example.com' })
+      users.findOne.mockResolvedValue(user)
+
+      const result = await service.forgotPassword('jane@example.com')
+
+      expect(mail.sendPasswordResetEmail).toHaveBeenCalledWith(
+        'jane@example.com',
+        expect.any(String),
+      )
+      expect(users.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          resetToken: expect.any(String),
+          resetTokenExpiresAt: expect.any(Date),
+        }),
+      )
+      expect(result.sent).toBe(true)
+    })
+
+    it('does nothing for an unknown address', async () => {
+      users.findOne.mockResolvedValue(null)
+      await expect(service.forgotPassword('ghost@example.com')).resolves.toEqual({ sent: false })
+      expect(mail.sendPasswordResetEmail).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('resetPassword', () => {
+    it('replaces the password hash and clears the token', async () => {
+      const user = new User()
+      Object.assign(user, {
+        id: 'usr_1',
+        passwordHash: 'old-hash',
+        resetToken: 'tok',
+        resetTokenExpiresAt: new Date(Date.now() + 60_000),
+      })
+      users.findOne.mockResolvedValue(user)
+
+      await expect(service.resetPassword('tok', 'brandnew123')).resolves.toEqual({ reset: true })
+      expect(users.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          passwordHash: expect.not.stringMatching(/^old-hash$/),
+          resetToken: undefined,
+          resetTokenExpiresAt: undefined,
+        }),
+      )
+    })
+
+    it('rejects an expired or unknown token', async () => {
+      users.findOne.mockResolvedValue(null)
+      await expect(service.resetPassword('stale', 'brandnew123')).rejects.toThrow(
+        BadRequestException,
       )
     })
   })

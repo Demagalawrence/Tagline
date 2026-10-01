@@ -2,7 +2,9 @@ import { Test } from '@nestjs/testing'
 import { getRepositoryToken } from '@nestjs/typeorm'
 import { QrService } from './qr.service'
 import { KeysService } from '../keys/keys.service'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { DeviceKey } from '../entities/device-key.entity'
+import { User } from '../entities/user.entity'
 import { SigningService, keyPairFromSeed } from '../signing/signing.service'
 import { UserProfile, PrivacySettings } from '../common/types'
 
@@ -44,6 +46,17 @@ describe('QrService', () => {
         SigningService,
         { provide: KeysService, useValue: keys },
         { provide: getRepositoryToken(DeviceKey), useValue: {} },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            increment: jest.fn().mockResolvedValue({ affected: 1 }),
+            update: jest.fn().mockResolvedValue({ affected: 1 }),
+          },
+        },
+        {
+          provide: AnalyticsService,
+          useValue: { track: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile()
 

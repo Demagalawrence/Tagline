@@ -23,6 +23,9 @@ export interface UserProfile {
   email?: string
   location?: string
   website?: string
+  emailVerified?: boolean
+  scanCount?: number
+  lastScannedAt?: string
   createdAt: string
 }
 
@@ -39,6 +42,19 @@ export interface ScannedContact {
   scannedAt: string
   type: ScannedQRType
   rawPayload: string
+  tags?: string[]
+}
+
+/** Recent connections plus account-level activity, from GET /connections/activity. */
+export interface ActivityFeed {
+  connections: ScannedContact[]
+  account: {
+    name: string
+    email: string
+    emailVerified: boolean
+    scanCount: number
+    lastScannedAt?: string
+  } | null
 }
 
 export interface NearbyDevice {

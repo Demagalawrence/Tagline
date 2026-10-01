@@ -3,7 +3,7 @@ import { Throttle } from '@nestjs/throttler'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'
 import { AuthService } from './auth.service'
-import { RegisterDto, LoginDto, ForgotPasswordDto } from '../common/dto'
+import { RegisterDto, LoginDto, ForgotPasswordDto, VerifyEmailDto, ResetPasswordDto } from '../common/dto'
 import { AuthenticatedRequest } from '../common/authenticated-request'
 
 // Credential endpoints get a tight budget: 5 attempts/minute/IP is generous for
@@ -34,6 +34,27 @@ export class AuthController {
   @ApiOperation({ summary: 'Request a password reset' })
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.auth.forgotPassword(dto.email)
+  }
+
+  @Post('reset-password')
+  @Throttle(AUTH_THROTTLE)
+  @ApiOperation({ summary: 'Set a new password with a reset token' })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.auth.resetPassword(dto.token, dto.password)
+  }
+
+  @Post('verify-email')
+  @Throttle(AUTH_THROTTLE)
+  @ApiOperation({ summary: 'Confirm an email address with a verification token' })
+  verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.auth.verifyEmail(dto.token)
+  }
+
+  @Post('resend-verification')
+  @Throttle(AUTH_THROTTLE)
+  @ApiOperation({ summary: 'Re-send the verification email for an unverified address' })
+  resendVerification(@Body() dto: ForgotPasswordDto) {
+    return this.auth.resendVerification(dto.email)
   }
 
   @Post('refresh')

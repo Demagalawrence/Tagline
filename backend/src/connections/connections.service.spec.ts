@@ -1,10 +1,12 @@
 import { ConnectionsService } from './connections.service'
 import { Connection } from '../entities/connection.entity'
+import { User } from '../entities/user.entity'
 import { ScannedContact } from '../common/types'
 import { Repository } from 'typeorm'
 
 describe('ConnectionsService', () => {
   let service: ConnectionsService
+  const users = { findOneBy: jest.fn() }
   const connections = {
     find: jest.fn(),
     create: jest.fn((c: Partial<Connection>) => c),
@@ -14,7 +16,10 @@ describe('ConnectionsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    service = new ConnectionsService(connections as unknown as Repository<Connection>)
+    service = new ConnectionsService(
+      connections as unknown as Repository<Connection>,
+      users as unknown as Repository<User>,
+    )
   })
 
   function entity(overrides: Partial<Connection> = {}): Connection {

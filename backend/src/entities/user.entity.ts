@@ -45,14 +45,32 @@ export class User {
   @Column({ nullable: true })
   verificationToken?: string
 
+  @Column({ type: 'timestamp', nullable: true })
+  verificationTokenExpiresAt?: Date
+
   @Column({ nullable: true })
   resetToken?: string
 
   @Column({ type: 'timestamp', nullable: true })
   resetTokenExpiresAt?: Date
 
+  /** Single-use secret behind a passwordless sign-in link. */
+  @Column({ nullable: true })
+  loginToken?: string
+
+  /** bcrypt hash of the emailed 6-digit code, never the code itself. */
+  @Column({ nullable: true })
+  loginCodeHash?: string
+
+  @Column({ type: 'timestamp', nullable: true })
+  loginTokenExpiresAt?: Date
+
   @Column({ type: 'int', default: 0 })
   scanCount: number
+
+  /** Codes this account has scanned, across every payload format. */
+  @Column({ type: 'int', default: 0 })
+  scansPerformed: number
 
   @Column({ type: 'timestamp', nullable: true })
   lastScannedAt?: Date
@@ -90,6 +108,7 @@ export class User {
       website: this.website,
       emailVerified: this.emailVerified,
       scanCount: this.scanCount,
+      scansPerformed: this.scansPerformed,
       lastScannedAt:
         this.lastScannedAt instanceof Date ? this.lastScannedAt.toISOString() : undefined,
       createdAt:

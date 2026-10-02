@@ -1,4 +1,6 @@
 import Constants from 'expo-constants'
+import * as Device from 'expo-device'
+import { Platform } from 'react-native'
 
 export const APP_NAME = 'ConnectQR'
 export const APP_TAGLINE = 'Connect instantly.'
@@ -48,3 +50,10 @@ export const QR_DESIGN_OPTIONS = {
 }
 
 export const USER_HANDLE = 'medi'
+
+/**
+ * Shown in the backend's session list so a user can tell their devices apart.
+ * Deliberately coarse: model + platform, no identifiers. `Device.osName` is
+ * avoided because on some Android builds it returns a long build fingerprint.
+ */
+export const DEVICE_LABEL = `${Device.modelName ?? Device.deviceName ?? 'Device'} (${Platform.OS})`

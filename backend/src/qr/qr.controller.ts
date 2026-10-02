@@ -72,8 +72,10 @@ export class QrController {
   }
 
   @Post('parse')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Parse a scanned QR payload into a contact' })
-  async parse(@Body() body: ParseQrDto) {
-    return this.qr.parseScannedPayload(body.payload)
+  parse(@Request() req: AuthenticatedRequest, @Body() body: ParseQrDto) {
+    return this.qr.parseScannedPayload(body.payload, req.user.sub)
   }
 }

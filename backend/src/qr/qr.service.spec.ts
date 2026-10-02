@@ -33,12 +33,19 @@ describe('QrService', () => {
   let service: QrService
   let signing: SigningService
   let keys: { findById: jest.Mock }
+  let users: { increment: jest.Mock; update: jest.Mock }
+  let analytics: { track: jest.Mock }
   let publicKey: string
 
   beforeEach(async () => {
     keys = { findById: jest.fn() }
     signing = new SigningService()
     publicKey = keyPair.publicKeyB64url
+    users = {
+      increment: jest.fn().mockResolvedValue({ affected: 1 }),
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
+    }
+    analytics = { track: jest.fn().mockResolvedValue(undefined) }
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -46,17 +53,8 @@ describe('QrService', () => {
         SigningService,
         { provide: KeysService, useValue: keys },
         { provide: getRepositoryToken(DeviceKey), useValue: {} },
-        {
-          provide: getRepositoryToken(User),
-          useValue: {
-            increment: jest.fn().mockResolvedValue({ affected: 1 }),
-            update: jest.fn().mockResolvedValue({ affected: 1 }),
-          },
-        },
-        {
-          provide: AnalyticsService,
-          useValue: { track: jest.fn().mockResolvedValue(undefined) },
-        },
+        { provide: getRepositoryToken(User), useValue: users },
+        { provide: AnalyticsService, useValue: analytics },
       ],
     }).compile()
 
@@ -121,6 +119,45 @@ describe('QrService', () => {
       const result = await service.parseScannedPayload('connectqr://offline/v1/abc.def')
       expect(result.trust).toBe('unverified')
       expect(result.format).toBe('connectqr-offline-v1')
+    })
+  })
+
+  describe('scan analytics', () => {
+    it('counts every scan the account performs, whatever the format', async () => {
+      await service.parseScannedPayload('https://wa.me/256700999888', 'usr_scanner')
+      await service.parseScannedPayload('just some words', 'usr_scanner')
+
+      const performed = users.increment.mock.calls.filter(
+        ([, field]) => (field as unknown) === 'scansPerformed',
+      )
+      expect(performed).toHaveLength(2)
+      expect(performed.every(([criteria]) => criteria.id === 'usr_scanner')).toBe(true)
+      expect(analytics.track).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'qr.scanned_by_user', userId: 'usr_scanner' }),
+      )
+    })
+
+    it('does not attribute an owner scan for payloads that name nobody', async () => {
+      await service.parseScannedPayload('https://wa.me/256700999888', 'usr_scanner')
+
+      expect(users.update).not.toHaveBeenCalled()
+      expect(analytics.track).not.toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'qr.scanned' }),
+      )
+    })
+
+    it('skips scanner analytics when the caller is anonymous', async () => {
+      await service.parseScannedPayload('https://wa.me/256700999888')
+
+      expect(users.increment).not.toHaveBeenCalled()
+    })
+
+    it('still returns the contact when analytics throws', async () => {
+      users.increment.mockRejectedValue(new Error('db down'))
+      analytics.track.mockRejectedValue(new Error('db down'))
+
+      const result = await service.parseScannedPayload('https://wa.me/256700999888', 'usr_scanner')
+      expect(result.contact.phone).toBe('+256700999888')
     })
   })
 

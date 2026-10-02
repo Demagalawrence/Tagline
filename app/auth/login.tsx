@@ -70,6 +70,9 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.links}>
+        <Link href="/auth/request-link" style={[styles.link, { color: colors.primary }]}>
+          Email me a sign-in link
+        </Link>
         <Link href="/auth/forgot-password" style={[styles.link, { color: colors.primary }]}>
           Forgot password?
         </Link>

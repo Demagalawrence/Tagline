@@ -1,5 +1,5 @@
 import * as Crypto from 'expo-crypto'
-import { ScannedContact, NearbyDevice, OfflineSession, ActivityFeed } from '../types'
+import { ScannedContact, NearbyDevice, OfflineSession, ActivityFeed, TagSummary } from '../types'
 import { useScanHistoryStore } from '../store/useScanHistoryStore'
 import { peerService } from './peerService'
 import { apiRequest } from './api'
@@ -12,6 +12,8 @@ export interface ConnectionService {
   startOfflineSession(): Promise<OfflineSession>
   stopOfflineSession(): Promise<boolean>
   getActivity(): Promise<ActivityFeed>
+  setTags(id: string, tags: string[]): Promise<ScannedContact>
+  getTagSummary(): Promise<TagSummary[]>
 }
 
 export class ApiConnectionService implements ConnectionService {
@@ -50,6 +52,29 @@ export class ApiConnectionService implements ConnectionService {
     } catch {
       await useScanHistoryStore.getState().remove(id)
       return true
+    }
+  }
+
+  async setTags(id: string, tags: string[]): Promise<ScannedContact> {
+    const updated = await apiRequest<ScannedContact>(
+      `/api/connections/${encodeURIComponent(id)}/tags`,
+      { method: 'PATCH', body: { tags }, auth: true },
+    )
+    // Keep the offline store in step so the row reflects the change even if the
+    // list is later re-read from local history.
+    void useScanHistoryStore.getState().update(id, { tags: updated.tags })
+    return updated
+  }
+
+  async getTagSummary(): Promise<TagSummary[]> {
+    try {
+      return await apiRequest<TagSummary[]>('/api/connections/tags', { auth: true })
+    } catch {
+      const counts = new Map<string, number>()
+      for (const c of useScanHistoryStore.getState().contacts) {
+        for (const tag of c.tags ?? []) counts.set(tag, (counts.get(tag) ?? 0) + 1)
+      }
+      return [...counts.entries()].map(([tag, count]) => ({ tag, count }))
     }
   }
 

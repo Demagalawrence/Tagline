@@ -12,8 +12,22 @@ export interface UserProfile {
   website?: string
   emailVerified?: boolean
   scanCount?: number
+  scansPerformed?: number
   lastScannedAt?: string
   createdAt: string
+}
+
+export interface AuthSessionInfo {
+  id: string
+  deviceLabel: string
+  userAgent?: string
+  ipAddress?: string
+  createdAt: string
+  lastUsedAt?: string
+  expiresAt: string
+  revokedAt?: string
+  isCurrent: boolean
+  isActive: boolean
 }
 
 export interface PrivacySettings {

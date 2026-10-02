@@ -28,12 +28,58 @@ export class MailService {
     return this.config.get<string>('APP_BASE_URL', 'http://localhost:3000')
   }
 
+  /**
+   * Base for links that open the mobile app. The custom scheme is registered by
+   * the Expo config and works in Expo Go and in any build, with no associated
+   * domain to verify.
+   */
+  get appLinkBase(): string {
+    return this.config.get<string>('APP_LINK_BASE', 'connectqr://')
+  }
+
+  appLink(path: string, params: Record<string, string> = {}): string {
+    const query = Object.entries(params)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&')
+    return `${this.appLinkBase}${path}${query ? `?${query}` : ''}`
+  }
+
+  /**
+   * Verification and reset emails link to the API rather than straight to the
+   * app: a mail client can always open an https URL, and the GET endpoint then
+   * consumes the token and redirects into the app.
+   */
   buildVerificationUrl(token: string): string {
     return `${this.baseUrl}/api/auth/verify-email?token=${encodeURIComponent(token)}`
   }
 
   buildResetUrl(token: string): string {
-    return `${this.baseUrl}/reset-password?token=${encodeURIComponent(token)}`
+    return `${this.baseUrl}/api/auth/reset-password?token=${encodeURIComponent(token)}`
+  }
+
+  buildMagicLinkUrl(token: string): string {
+    return `${this.baseUrl}/api/auth/magic-link?token=${encodeURIComponent(token)}`
+  }
+
+  /**
+   * The link is the primary path; the code is the fallback for when the mail
+   * client refuses to hand the URL to the app. Sending both from one challenge
+   * keeps a single token pair to manage instead of two flows.
+   */
+  async sendMagicLinkEmail(to: string, token: string, code: string): Promise<void> {
+    const url = this.buildMagicLinkUrl(token)
+    await this.send({
+      to,
+      subject: 'Your ConnectQR sign-in link',
+      html: `
+        <p>Tap below to sign in to ConnectQR. No password needed.</p>
+        <p><a href="${url}">Sign in to ConnectQR</a></p>
+        <p>Or open this link: ${url}</p>
+        <p>Your code is <strong>${code}</strong>, in case the link does not open the app.</p>
+        <p>This link and code expire in 10 minutes and can each be used only once. If you did not
+        request a sign-in link, ignore this email.</p>
+      `,
+    })
   }
 
   async sendVerificationEmail(to: string, token: string): Promise<void> {
@@ -44,6 +90,7 @@ export class MailService {
         <p>Welcome! Confirm your email address to activate your ConnectQR account.</p>
         <p><a href="${this.buildVerificationUrl(token)}">Verify my email</a></p>
         <p>Or open this link: ${this.buildVerificationUrl(token)}</p>
+        <p>This link can be used once.</p>
       `,
     })
   }

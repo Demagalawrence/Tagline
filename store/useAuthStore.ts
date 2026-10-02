@@ -14,6 +14,9 @@ interface AuthStore {
   error: string | null
   login: (email: string, password: string) => Promise<boolean>
   register: (name: string, email: string, phone: string, password: string) => Promise<boolean>
+  requestMagicLink: (email: string) => Promise<{ ok: boolean; devLoginCode?: string }>
+  verifyMagicLink: (token: string) => Promise<boolean>
+  verifyLoginCode: (email: string, code: string) => Promise<boolean>
   logout: () => Promise<void>
   hydrate: () => Promise<void>
   updateUser: (updates: Partial<UserProfile>) => void
@@ -109,6 +112,61 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 
+  requestMagicLink: async (email) => {
+    set({ isLoading: true, error: null })
+    try {
+      const res = await authService.requestMagicLink(email)
+      set({ isLoading: false })
+      return { ok: true, devLoginCode: res.devLoginCode }
+    } catch (err) {
+      set({
+        isLoading: false,
+        error: err instanceof Error ? err.message : 'Could not send the sign-in link.',
+      })
+      return { ok: false }
+    }
+  },
+
+  verifyMagicLink: async (token) => {
+    set({ isLoading: true, error: null })
+    try {
+      const res = await authService.verifyMagicLink(token)
+      useProfileStore.setState({ profile: res.user })
+      void useProfileStore
+        .getState()
+        .load()
+        .catch(() => {})
+      set({ isAuthenticated: true, user: res.user, isLoading: false, error: null })
+      return true
+    } catch (err) {
+      set({
+        isLoading: false,
+        error: err instanceof Error ? err.message : 'That sign-in link is no longer valid.',
+      })
+      return false
+    }
+  },
+
+  verifyLoginCode: async (email, code) => {
+    set({ isLoading: true, error: null })
+    try {
+      const res = await authService.verifyLoginCode(email, code)
+      useProfileStore.setState({ profile: res.user })
+      void useProfileStore
+        .getState()
+        .load()
+        .catch(() => {})
+      set({ isAuthenticated: true, user: res.user, isLoading: false, error: null })
+      return true
+    } catch (err) {
+      set({
+        isLoading: false,
+        error: err instanceof Error ? err.message : 'Enter the 6-digit code from your email.',
+      })
+      return false
+    }
+  },
+
   logout: async () => {
     set({ isLoading: true })
     try {
@@ -118,7 +176,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       resetUserState()
     }
   },
-
   updateUser: (updates) => {
     const current = get().user
     // Never substitute mock data: if there is no user there is nothing to merge.

@@ -147,9 +147,21 @@ export class QrService {
     return `${body}.${sig}`
   }
 
-  async parseScannedPayload(raw: string): Promise<ParseResult> {
+  async parseScannedPayload(raw: string, scannerId?: string): Promise<ParseResult> {
     const trimmed = raw.trim()
+    const result = await this.parsePayload(trimmed)
 
+    // Two different numbers are in play here and conflating them is misleading:
+    //   - scansPerformed counts codes this account has scanned, for every format.
+    //   - scanCount is the lifetime counter the owner's profile advertises, and
+    //     only codes that name an owner can be attributed.
+    if (scannerId) {
+      await this.recordScanPerformed(scannerId, result.format, result.trust)
+    }
+    return result
+  }
+
+  private async parsePayload(trimmed: string): Promise<ParseResult> {
     if (trimmed.startsWith(OFFLINE_PREFIX_V2)) {
       return this.parseOfflinePayload(trimmed)
     }
@@ -233,6 +245,28 @@ export class QrService {
       await this.analytics.track({ name: 'qr.scanned', userId: uid, properties: { trust } })
     } catch {
       // Unknown or deleted owner: nothing to record, and no reason to fail parse.
+    }
+  }
+
+  /**
+   * Records a scan against the scanning account, whichever kind of code it was.
+   * Best-effort for the same reason as `recordScan`: analytics must never break
+   * a scan.
+   */
+  private async recordScanPerformed(
+    scannerId: string,
+    format: string,
+    trust: PayloadTrust,
+  ): Promise<void> {
+    try {
+      await this.users.increment({ id: scannerId }, 'scansPerformed', 1)
+      await this.analytics.track({
+        name: 'qr.scanned_by_user',
+        userId: scannerId,
+        properties: { format, trust },
+      })
+    } catch {
+      // Best effort only.
     }
   }
 

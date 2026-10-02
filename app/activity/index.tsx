@@ -57,10 +57,11 @@ export default function ActivityScreen() {
   const stats = useMemo(() => {
     const account = feed?.account
     return [
+      { label: 'Codes you scanned', value: account?.scansPerformed ?? 0 },
       { label: 'People scanned your card', value: account?.scanCount ?? 0 },
       { label: 'Connections saved', value: feed?.connections.length ?? 0 },
       {
-        label: 'Last scan',
+        label: 'Last scan of your card',
         value: account?.lastScannedAt ? timeAgo(account.lastScannedAt) : 'None yet',
       },
     ]

@@ -15,11 +15,13 @@ import { successHaptic, errorHaptic } from '@/utils/haptics'
 
 export default function ResetPasswordScreen() {
   const router = useRouter()
-  const params = useLocalSearchParams<{ token?: string }>()
+  const params = useLocalSearchParams<{ token?: string; error?: string }>()
   const [token, setToken] = useState(params.token ?? '')
   const [done, setDone] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    params.error === 'missing' ? 'That reset link is missing its code. Request a new email.' : null,
+  )
 
   const { control, handleSubmit } = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),

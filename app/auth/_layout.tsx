@@ -20,6 +20,9 @@ export default function AuthLayout() {
       <Stack.Screen name="register" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="forgot-password" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="reset-password" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="verified" options={{ animation: 'fade' }} />
+      <Stack.Screen name="request-link" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="magic-link" options={{ animation: 'fade' }} />
     </Stack>
   )
 }

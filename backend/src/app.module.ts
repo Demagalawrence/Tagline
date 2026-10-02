@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ThrottlerModule } from '@nestjs/throttler'
+import { ScheduleModule } from '@nestjs/schedule'
 import { join } from 'path'
 import { AuthModule } from './auth/auth.module'
 import { ProfileModule } from './profile/profile.module'
@@ -57,6 +58,7 @@ import { assertSecureConfig } from './config/validate'
     }),
     SigningModule,
     HealthModule,
+    ScheduleModule.forRoot(),
     AuthModule,
     ProfileModule,
     QrModule,

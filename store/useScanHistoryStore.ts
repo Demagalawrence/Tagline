@@ -8,6 +8,7 @@ interface ScanHistoryState {
   isHydrated: boolean
   hydrate: () => Promise<void>
   add: (contact: ScannedContact) => Promise<void>
+  update: (id: string, patch: Partial<ScannedContact>) => Promise<void>
   remove: (id: string) => Promise<void>
   clear: () => Promise<void>
 }
@@ -62,6 +63,12 @@ export const useScanHistoryStore = create<ScanHistoryState>((set, get) => ({
     const deduped = existing.filter((c) => !isSameContact(c, contact))
     // Newest scan first.
     const next = [contact, ...deduped]
+    set({ contacts: next })
+    await persist(next)
+  },
+
+  update: async (id, patch) => {
+    const next = get().contacts.map((c) => (c.id === id ? { ...c, ...patch } : c))
     set({ contacts: next })
     await persist(next)
   },

@@ -21,6 +21,11 @@ export const forgotPasswordSchema = z.object({
   email: z.string().trim().email('Enter a valid email address'),
 })
 
+/** Just an email, reused by the passwordless request form. */
+export const emailSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address'),
+})
+
 export const resetPasswordSchema = z
   .object({
     password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -50,4 +55,5 @@ export type LoginFormValues = z.infer<typeof loginSchema>
 export type RegisterFormValues = z.infer<typeof registerSchema>
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>
+export type EmailFormValues = z.infer<typeof emailSchema>
 export type ProfileFormValues = z.infer<typeof profileSchema>

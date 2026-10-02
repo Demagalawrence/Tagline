@@ -9,6 +9,7 @@ describe('ConnectionsService', () => {
   const users = { findOneBy: jest.fn() }
   const connections = {
     find: jest.fn(),
+    findOneBy: jest.fn(),
     create: jest.fn((c: Partial<Connection>) => c),
     save: jest.fn(),
     delete: jest.fn(),
@@ -103,6 +104,68 @@ describe('ConnectionsService', () => {
     it('returns true when a row was deleted', async () => {
       connections.delete.mockResolvedValue({ affected: 1 })
       await expect(service.delete('usr_1', 'conn_1')).resolves.toBe(true)
+    })
+  })
+
+  describe('setTags', () => {
+    it('trims, drops blanks and removes duplicates', async () => {
+    const saved = await service.setTags('usr_1', 'con_1', [
+      '  Work ',
+      'work',
+      '   ',
+      'Vip',
+    ])
+    expect(saved?.tags).toEqual(['Work', 'Vip'])
+  })
+
+  it('caps the number of tags even when the client sends more', async () => {
+    const many = Array.from({ length: 30 }, (_, i) => `tag${i}`)
+    const saved = await service.setTags('usr_1', 'con_1', many)
+    expect(saved?.tags).toHaveLength(12)
+  })      const row = entity({ tags: ['whatsapp'] })
+      row.toContact = () => ({ ...row, tags: row.tags }) as never
+      connections.findOneBy.mockResolvedValue(row)
+      connections.save.mockImplementation((c: Connection) => c)
+
+      await service.setTags('usr_1', 'conn_1', ['  client ', 'client', '  ', 'follow-up'])
+
+      expect(connections.save).toHaveBeenCalledWith(
+        expect.objectContaining({ tags: ['client', 'follow-up'] }),
+      )
+    })
+
+    it('keeps an explicitly empty tag list', async () => {
+      const row = entity({ tags: ['whatsapp'] })
+      connections.findOneBy.mockResolvedValue(row)
+      connections.save.mockImplementation((c: Connection) => c)
+
+      await service.setTags('usr_1', 'conn_1', [])
+
+      expect(connections.save).toHaveBeenCalledWith(expect.objectContaining({ tags: [] }))
+    })
+
+    it('only touches connections owned by the caller', async () => {
+      connections.findOneBy.mockResolvedValue(null)
+
+      await expect(service.setTags('usr_1', 'conn_other', ['x'])).resolves.toBeNull()
+      expect(connections.findOneBy).toHaveBeenCalledWith({ userId: 'usr_1', id: 'conn_other' })
+      expect(connections.save).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getTagSummary', () => {
+    it('counts tags across connections, most used first', async () => {
+      connections.find.mockResolvedValue([
+        entity({ id: 'c1', tags: ['client', 'vip'] }),
+        entity({ id: 'c2', tags: ['client'] }),
+      ])
+
+      const result = await service.getTagSummary('usr_1')
+
+      expect(result).toEqual([
+        { tag: 'client', count: 2 },
+        { tag: 'vip', count: 1 },
+      ])
     })
   })
 

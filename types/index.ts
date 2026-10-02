@@ -25,6 +25,7 @@ export interface UserProfile {
   website?: string
   emailVerified?: boolean
   scanCount?: number
+  scansPerformed?: number
   lastScannedAt?: string
   createdAt: string
 }
@@ -46,6 +47,12 @@ export interface ScannedContact {
 }
 
 /** Recent connections plus account-level activity, from GET /connections/activity. */
+/** A tag in use by this account, with how many connections carry it. */
+export interface TagSummary {
+  tag: string
+  count: number
+}
+
 export interface ActivityFeed {
   connections: ScannedContact[]
   account: {
@@ -53,6 +60,7 @@ export interface ActivityFeed {
     email: string
     emailVerified: boolean
     scanCount: number
+    scansPerformed: number
     lastScannedAt?: string
   } | null
 }

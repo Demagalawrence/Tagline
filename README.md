@@ -1,4 +1,4 @@
-# Tagline (ConnectQR)
+# Tagline 
 
 Scan, share, and connect instantly. ConnectQR is an Expo (React Native) mobile app with a NestJS backend that turns your business card into a QR code — WhatsApp, public profile, or fully offline peer-to-peer payloads.
 

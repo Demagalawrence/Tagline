@@ -42,28 +42,28 @@ export class User {
   @Column({ type: 'boolean', default: false })
   emailVerified: boolean
 
-  @Column({ nullable: true })
-  verificationToken?: string
+  @Column({ type: 'varchar', nullable: true })
+  verificationToken: string | null
 
   @Column({ type: 'timestamp', nullable: true })
-  verificationTokenExpiresAt?: Date
+  verificationTokenExpiresAt: Date | null
 
-  @Column({ nullable: true })
-  resetToken?: string
+  @Column({ type: 'varchar', nullable: true })
+  resetToken: string | null
 
   @Column({ type: 'timestamp', nullable: true })
-  resetTokenExpiresAt?: Date
+  resetTokenExpiresAt: Date | null
 
   /** Single-use secret behind a passwordless sign-in link. */
-  @Column({ nullable: true })
-  loginToken?: string
+  @Column({ type: 'varchar', nullable: true })
+  loginToken: string | null
 
   /** bcrypt hash of the emailed 6-digit code, never the code itself. */
-  @Column({ nullable: true })
-  loginCodeHash?: string
+  @Column({ type: 'varchar', nullable: true })
+  loginCodeHash: string | null
 
   @Column({ type: 'timestamp', nullable: true })
-  loginTokenExpiresAt?: Date
+  loginTokenExpiresAt: Date | null
 
   @Column({ type: 'int', default: 0 })
   scanCount: number

@@ -108,21 +108,8 @@ describe('ConnectionsService', () => {
   })
 
   describe('setTags', () => {
-    it('trims, drops blanks and removes duplicates', async () => {
-    const saved = await service.setTags('usr_1', 'con_1', [
-      '  Work ',
-      'work',
-      '   ',
-      'Vip',
-    ])
-    expect(saved?.tags).toEqual(['Work', 'Vip'])
-  })
-
-  it('caps the number of tags even when the client sends more', async () => {
-    const many = Array.from({ length: 30 }, (_, i) => `tag${i}`)
-    const saved = await service.setTags('usr_1', 'con_1', many)
-    expect(saved?.tags).toHaveLength(12)
-  })      const row = entity({ tags: ['whatsapp'] })
+    it('trims, drops blanks and removes case-insensitive duplicates', async () => {
+      const row = entity({ tags: ['whatsapp'] })
       row.toContact = () => ({ ...row, tags: row.tags }) as never
       connections.findOneBy.mockResolvedValue(row)
       connections.save.mockImplementation((c: Connection) => c)
@@ -132,6 +119,19 @@ describe('ConnectionsService', () => {
       expect(connections.save).toHaveBeenCalledWith(
         expect.objectContaining({ tags: ['client', 'follow-up'] }),
       )
+    })
+
+    it('caps the number of tags even when the client sends more', async () => {
+      const row = entity({ tags: [] })
+      row.toContact = () => ({ ...row, tags: row.tags }) as never
+      connections.findOneBy.mockResolvedValue(row)
+      connections.save.mockImplementation((c: Connection) => c)
+
+      const many = Array.from({ length: 30 }, (_, i) => `tag${i}`)
+      await service.setTags('usr_1', 'conn_1', many)
+
+      const saved = connections.save.mock.calls[0][0] as Connection
+      expect(saved.tags).toHaveLength(12)
     })
 
     it('keeps an explicitly empty tag list', async () => {

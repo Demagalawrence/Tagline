@@ -102,7 +102,6 @@ export class ConnectionsService {
     row.tags = normalized.slice(0, MAX_TAGS_PER_CONNECTION)
     // A connection with no tags is still perfectly valid, so keep whatever the
     // user asked for rather than silently reinstating the type default.
-    row.tags = normalized
     const saved = await this.connections.save(row)
     return saved.toContact()
   }

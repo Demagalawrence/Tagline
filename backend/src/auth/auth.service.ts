@@ -129,8 +129,8 @@ export class AuthService {
     if (!user) throw new BadRequestException('Invalid or expired verification link')
 
     user.emailVerified = true
-    user.verificationToken = undefined
-    user.verificationTokenExpiresAt = undefined
+    user.verificationToken = null
+    user.verificationTokenExpiresAt = null
     await this.users.save(user)
     return { verified: true }
   }
@@ -181,8 +181,8 @@ export class AuthService {
     if (!user) throw new BadRequestException('Invalid or expired reset token')
 
     user.passwordHash = await bcrypt.hash(password, 10)
-    user.resetToken = undefined
-    user.resetTokenExpiresAt = undefined
+    user.resetToken = null
+    user.resetTokenExpiresAt = null
     await this.users.save(user)
     return { reset: true }
   }
@@ -250,9 +250,9 @@ export class AuthService {
 
   /** Invalidate both halves of the challenge so neither can be replayed. */
   private async clearLoginChallenge(user: User): Promise<void> {
-    user.loginToken = undefined
-    user.loginCodeHash = undefined
-    user.loginTokenExpiresAt = undefined
+    user.loginToken = null
+    user.loginCodeHash = null
+    user.loginTokenExpiresAt = null
     await this.users.save(user)
   }
 

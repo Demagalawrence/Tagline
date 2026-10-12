@@ -154,8 +154,10 @@ describe('AuthService', () => {
       expect(users.save).toHaveBeenCalledWith(
         expect.objectContaining({
           emailVerified: true,
-          verificationToken: undefined,
-          verificationTokenExpiresAt: undefined,
+          // Cleared with `null`, not `undefined`: TypeORM skips undefined
+          // properties on save, so an undefined clears nothing.
+          verificationToken: null,
+          verificationTokenExpiresAt: null,
         }),
       )
     })
@@ -220,8 +222,8 @@ describe('AuthService', () => {
       expect(users.save).toHaveBeenCalledWith(
         expect.objectContaining({
           passwordHash: expect.not.stringMatching(/^old-hash$/),
-          resetToken: undefined,
-          resetTokenExpiresAt: undefined,
+          resetToken: null,
+          resetTokenExpiresAt: null,
         }),
       )
     })
@@ -464,9 +466,9 @@ describe('AuthService', () => {
 
       expect(res.token).toBe('signed-token')
       const cleared = savedUser()
-      expect(cleared.loginToken).toBeUndefined()
-      expect(cleared.loginCodeHash).toBeUndefined()
-      expect(cleared.loginTokenExpiresAt).toBeUndefined()
+      expect(cleared.loginToken).toBeNull()
+      expect(cleared.loginCodeHash).toBeNull()
+      expect(cleared.loginTokenExpiresAt).toBeNull()
     })
 
     it('rejects an expired or unknown link token', async () => {
@@ -483,7 +485,7 @@ describe('AuthService', () => {
       const res = await service.verifyLoginCode('jane@example.com', '042917')
 
       expect(res.token).toBe('signed-token')
-      expect(savedUser().loginCodeHash).toBeUndefined()
+      expect(savedUser().loginCodeHash).toBeNull()
     })
 
     it('leaves the challenge usable after a mistyped code', async () => {

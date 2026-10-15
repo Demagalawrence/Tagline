@@ -74,46 +74,6 @@ npm install
 npm start
 ```
 
-## Backend API
-
-Authenticated endpoints expect `Authorization: Bearer <token>`.
-
-| Method | Path                  | Description                      |
-| ------ | --------------------- | -------------------------------- |
-| POST   | `/api/auth/register`  | Create an account (unverified)   |
-| POST   | `/api/auth/login`     | Sign in with password, returns a JWT |
-| POST   | `/api/auth/verify-email` | Confirm an address with a verification token |
-| GET    | `/api/auth/verify-email` | Email-link entry point, redirects into the app |
-| POST   | `/api/auth/resend-verification` | Resend the confirmation email |
-| POST   | `/api/auth/forgot-password` | Request a password reset |
-| GET/POST | `/api/auth/reset-password` | Reset entry point + set a new password |
-| POST   | `/api/auth/magic-link` | Email a single-use sign-in link + 6-digit code |
-| GET    | `/api/auth/magic-link` | Email-link entry point, redirects into the app |
-| POST   | `/api/auth/magic-link/verify` | Exchange a link token for a session |
-| POST   | `/api/auth/code/verify` | Exchange the 6-digit code for a session |
-| POST   | `/api/auth/refresh`   | Exchange a valid token for a fresh one |
-| GET    | `/api/auth/sessions`  | List the signed-in devices |
-| DELETE | `/api/auth/sessions/:id` | Revoke one device session |
-| POST   | `/api/auth/sessions/revoke-others` | Sign out every device but this one |
-| POST   | `/api/auth/logout`    | End the current session |
-| GET    | `/api/auth/me`        | Current user profile             |
-| GET    | `/api/profile`        | Get profile                      |
-| PATCH  | `/api/profile`        | Update profile                   |
-| GET    | `/api/profile/privacy` | Get privacy settings            |
-| PATCH  | `/api/profile/privacy` | Update privacy settings         |
-| POST   | `/api/qr/generate`    | Generate a QR payload            |
-| POST   | `/api/qr/parse`       | Parse a scanned QR payload (records analytics) |
-| GET    | `/api/connections`    | List saved connections           |
-| POST   | `/api/connections`    | Save a scanned contact           |
-| DELETE | `/api/connections/:id` | Delete a connection             |
-| PATCH  | `/api/connections/:id/tags` | Replace a connection's tags |
-| GET    | `/api/connections/tags` | List tags in use, with counts  |
-| POST   | `/api/offline/start`  | Start an offline sharing session |
-| GET    | `/api/offline/session` | Get the active session          |
-| DELETE | `/api/offline/stop`   | Stop the active session          |
-| GET    | `/api/connections/activity` | Recent connections + account stats |
-
-Interactive docs are served at `/docs`.
 
 ## Configuration
 
